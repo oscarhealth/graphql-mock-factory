@@ -1,0 +1,77 @@
+{
+  "name": "graphql-mock-factory",
+  "version": "0.0.1",
+  "description": "Easily generate customized GraphQL mock responses in JavaScript tests.",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "yarn test --watch",
+    "prepublish": "yarn build && yarn flow && yarn test",
+    "flow": "flow check",
+    "prettier": "prettier \"src/**/*\" --write",
+    "build": "rm -rf dist && babel src -d dist --source-maps && flow-copy-source src dist && del dist/**/__tests__",
+    "build-debug": "rm -rf dist && babel src --copy-files --out-dir dist --source-maps"
+  },
+  "keywords": [
+    "graphql",
+    "test",
+    "testing",
+    "mock",
+    "mocking",
+    "factory",
+    "fixture"
+  ],
+  "author": "@jnak",
+  "license": "Apache-2.0",
+  "files": [
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "lib",
+    "yarn.lock"
+  ],
+  "devDependencies": {
+    "@babel/cli": "^7.0.0-rc.1",
+    "@babel/core": "^7.0.0-rc.1",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-rc.1",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-rc.1",
+    "@babel/preset-env": "^7.0.0-rc.1",
+    "@babel/preset-flow": "^7.0.0-rc.1",
+    "babel-core": "^7.0.0-0",
+    "babel-jest": "^23.4.2",
+    "del-cli": "^1.1.0",
+    "graphql": "^0.13.2",
+    "flow-bin": "^0.89.0",
+    "flow-copy-source": "^2.0.2",
+    "flow-typed": "^2.5.1",
+    "husky": "^1.3.1",
+    "jest": "^23.5.0",
+    "lint-staged": "^8.1.1",
+    "lodash": "^4.17.11",
+    "prettier": "^1.16.2"
+  },
+  "dependencies": {
+    "graphql-tools": "^4.0.4",
+    "object-hash": "^1.3.1"
+  },
+  "peerDependencies": {
+    "graphql": "^0.13.0 || ^14.0.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,json,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "semi": true,
+    "singleQuote": true,
+    "printWidth": 80
+  }
+}
