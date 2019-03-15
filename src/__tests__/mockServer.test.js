@@ -373,7 +373,7 @@ describe('mockServer', () => {
       });
     });
 
-    describe('mockQuery parameter', () => {
+    describe('queryMock parameter', () => {
       it('Does a deep merge similar to overriding mocks', async () => {
         const mocks = {
           Query: {
@@ -405,9 +405,9 @@ describe('mockServer', () => {
           {},
           {
             object: {
-              property: 'mockQuery.object.property',
+              property: 'queryMock.object.property',
               object: ({ argument }) => ({
-                property: `mockQuery.object.object.property:${argument}`
+                property: `queryMock.object.object.property:${argument}`
               })
             }
           }
@@ -417,10 +417,10 @@ describe('mockServer', () => {
           data: {
             object: {
               object: {
-                property: 'mockQuery.object.object.property:ARGUMENT',
+                property: 'queryMock.object.object.property:ARGUMENT',
                 property2: 'Object.property2'
               },
-              property: 'mockQuery.object.property',
+              property: 'queryMock.object.property',
               property2: 'Query.object.property2'
             }
           }
@@ -447,7 +447,7 @@ describe('mockServer', () => {
           {},
           {
             listOfObjects: [
-              { property: 'mockQuery.listOfObject.0.property' },
+              { property: 'queryMock.listOfObject.0.property' },
               {},
               null,
               undefined
@@ -458,7 +458,7 @@ describe('mockServer', () => {
         expect(result).toEqual({
           data: {
             listOfObjects: [
-              { property: 'mockQuery.listOfObject.0.property' },
+              { property: 'queryMock.listOfObject.0.property' },
               { property: 'Object.property' },
               null,
               null
@@ -495,10 +495,10 @@ describe('mockServer', () => {
           {
             listOfObjects: ({ argument }) => [
               {
-                property: `mockQuery.listOfObjects.0.property:${argument}`
+                property: `queryMock.listOfObjects.0.property:${argument}`
               },
               {
-                property2: `mockQuery.listOfObjects.0.property2`
+                property2: `queryMock.listOfObjects.0.property2`
               },
               {}
             ]
@@ -509,18 +509,52 @@ describe('mockServer', () => {
           data: {
             listOfObjects: [
               {
-                property: 'mockQuery.listOfObjects.0.property:ARGUMENT',
+                property: 'queryMock.listOfObjects.0.property:ARGUMENT',
                 property2: 'Object.property2'
               },
               {
                 property: 'Query.listOfObjects.1:ARGUMENT',
-                property2: 'mockQuery.listOfObjects.0.property2'
+                property2: 'queryMock.listOfObjects.0.property2'
               },
               {
                 property: 'Query.listOfObjects.2:ARGUMENT',
                 property2: 'Object.property2'
               }
             ]
+          }
+        });
+      });
+
+      fit('Allows to specify values for aliased fields', async () => {
+        const mocks = {
+          Object: {
+            property: () => 'Object.property'
+          }
+        };
+
+        const server = mockServer(schemaDefinition, mocks);
+
+        const result = await server(
+          `
+          query test {
+            object {
+              propertyAlias: property
+            }
+          }
+        `,
+          {},
+          {
+            object: {
+              propertyAlias: 'queryMock.object.propertyAlias'
+            }
+          }
+        );
+
+        expect(result).toEqual({
+          data: {
+            object: {
+              property: 'queryMock.object.propertyAlias'
+            }
           }
         });
       });

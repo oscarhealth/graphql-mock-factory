@@ -9,8 +9,8 @@
     "prepublish": "yarn build && yarn flow && yarn test",
     "flow": "flow check",
     "prettier": "prettier \"src/**/*\" --write",
-    "build": "rm -rf dist && babel src -d dist --source-maps && flow-copy-source src dist && del dist/**/__tests__",
-    "build-debug": "rm -rf dist && babel src --copy-files --out-dir dist --source-maps"
+    "build": "npm run build-dist && del dist/**/__tests__",
+    "build-dist": "rm -rf dist && babel src -d dist --source-maps && flow-copy-source src dist"
   },
   "keywords": [
     "graphql",
