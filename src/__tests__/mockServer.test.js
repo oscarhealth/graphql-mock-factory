@@ -2,6 +2,12 @@
 import _ from 'lodash';
 import { mockServer, mockList, mockRelayConnection } from '../mockServer';
 
+/* 
+TODO
+- Add test for helpful error when using promise
+  https://github.com/graphql/graphql-js/pull/1115
+*/
+
 describe('mockServer', () => {
   describe('Mock precedence rules', () => {
     const schemaDefinition = `
@@ -22,7 +28,7 @@ describe('mockServer', () => {
       }
     `;
 
-    it('Mocks a field', async () => {
+    it('Mocks a field', () => {
       const mocks = {
         Query: {
           object: () => {}
@@ -34,7 +40,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object {
             property
@@ -51,7 +57,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Allows overriding a nested field mock with an object', async () => {
+    it('Allows overriding a nested field mock with an object', () => {
       const mocks = {
         Query: {
           object: () => ({
@@ -65,7 +71,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object {
             property
@@ -82,7 +88,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Ignores overrides when it is undefined', async () => {
+    it('Ignores overrides when it is undefined', () => {
       const mocks = {
         Query: {
           object: () => undefined
@@ -94,7 +100,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object {
             property
@@ -110,7 +116,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Ignores overrides when it is an empty object', async () => {
+    it('Ignores overrides when it is an empty object', () => {
       const mocks = {
         Query: {
           object: () => ({})
@@ -122,7 +128,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object {
             property
@@ -139,7 +145,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Does a deep deep merge of overrides', async () => {
+    it('Does a deep deep merge of overrides', () => {
       const mocks = {
         Query: {
           object: () => ({
@@ -165,7 +171,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object {
             property
@@ -200,7 +206,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Passes args to a field mock', async () => {
+    it('Passes args to a field mock', () => {
       const mocks = {
         Query: {
           object: ({ argument }) => ({
@@ -214,7 +220,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object(argument: "ARGUMENT") {
             property
@@ -231,7 +237,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Mocks aliased field', async () => {
+    it('Mocks aliased field', () => {
       const mocks = {
         Object: {
           property: () => 'Object.property'
@@ -240,7 +246,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object {
             aliasedProperty: property
@@ -257,7 +263,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Returns null when mock return null', async () => {
+    it('Returns null when mock return null', () => {
       const mocks = {
         Query: {
           object: () => ({
@@ -272,7 +278,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object {
             property
@@ -291,7 +297,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Returns an error payload when mocks return an error', async () => {
+    it('Returns an error payload when mocks return an error', () => {
       const mocks = {
         Query: {
           object: () => ({
@@ -306,7 +312,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object {
             property
@@ -324,7 +330,7 @@ describe('mockServer', () => {
       expect(result.errors).toHaveLength(2);
     });
 
-    it('Does a deep merge mocked lists', async () => {
+    it('Does a deep merge mocked lists', () => {
       const mocks = {
         Query: {
           object: () => ({
@@ -344,7 +350,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object {
             listOfObjects(argument: "ARGUMENT") {
@@ -374,7 +380,7 @@ describe('mockServer', () => {
     });
 
     describe('queryMock parameter', () => {
-      it('Does a deep merge similar to overriding mocks', async () => {
+      it('Does a deep merge similar to overriding mocks', () => {
         const mocks = {
           Query: {
             object: () => ({
@@ -389,7 +395,7 @@ describe('mockServer', () => {
 
         const server = mockServer(schemaDefinition, mocks);
 
-        const result = await server(
+        const result = server(
           `
           query test {
             object {
@@ -427,7 +433,7 @@ describe('mockServer', () => {
         });
       });
 
-      it('Allows arrays as overrides', async () => {
+      it('Allows arrays as overrides', () => {
         const mocks = {
           Object: {
             property: () => 'Object.property'
@@ -436,7 +442,7 @@ describe('mockServer', () => {
 
         const server = mockServer(schemaDefinition, mocks);
 
-        const result = await server(
+        const result = server(
           `
           query test {
             listOfObjects {
@@ -467,7 +473,7 @@ describe('mockServer', () => {
         });
       });
 
-      it('Does a deep merge of arrays with mocked lists', async () => {
+      it('Does a deep merge of arrays with mocked lists', () => {
         const mocks = {
           Query: {
             listOfObjects: mockList(1, ({ argument }, index) => ({
@@ -482,7 +488,7 @@ describe('mockServer', () => {
 
         const server = mockServer(schemaDefinition, mocks);
 
-        const result = await server(
+        const result = server(
           `
           query test {
             listOfObjects(argument: "ARGUMENT") {
@@ -525,8 +531,16 @@ describe('mockServer', () => {
         });
       });
 
-      fit('Allows to specify values for aliased fields', async () => {
+      fit('Allows to specify values for aliased fields', () => {
         const mocks = {
+          Query: {
+            object: () => ({
+              property: 'Query.object.property',
+              object: {
+                property: 'Query.object.object.property'
+              }
+            })
+          },
           Object: {
             property: () => 'Object.property'
           }
@@ -534,26 +548,67 @@ describe('mockServer', () => {
 
         const server = mockServer(schemaDefinition, mocks);
 
-        const result = await server(
+        const result = server(
           `
           query test {
+            aliasedObject: object {
+              aliasedProperty: property
+              aliasedObject: object {
+                property
+              }
+            }
             object {
-              propertyAlias: property
+              property
+              propertyAlias1: property
+              propertyAlias2: property
+              objectAlias1: object {
+                property
+              }
+              objectAlias2: object {
+                property
+              }
             }
           }
         `,
           {},
           {
+            aliasedObject: {
+              aliasedProperty: 'queryMock.aliasedObject.aliasedProperty'
+              // aliasedObject: {
+              //   property2: 'test',
+              // }
+            },
             object: {
-              propertyAlias: 'queryMock.object.propertyAlias'
+              propertyAlias1: 'queryMock.object.propertyAlias1',
+              propertyAlias2: 'queryMock.object.propertyAlias2',
+              objectAlias1: {
+                property: 'queryMock.objectAlias1.property'
+              },
+              objectAlias2: {
+                property: 'queryMock.objectAlias2.property'
+              }
             }
           }
         );
 
         expect(result).toEqual({
           data: {
+            aliasedObject: {
+              aliasedProperty: 'queryMock.aliasedObject.property',
+              aliasedObject: {
+                property: 'Query.object.object.property'
+              }
+            },
             object: {
-              property: 'queryMock.object.propertyAlias'
+              property: 'Query.object.property',
+              propertyAlias1: 'queryMock.object.propertyAlias1',
+              propertyAlias2: 'queryMock.object.propertyAlias2',
+              objectAlias1: {
+                property: 'queryMock.objectAlias1.property'
+              },
+              objectAlias2: {
+                property: 'queryMock.objectAlias2.property'
+              }
             }
           }
         });
@@ -586,7 +641,7 @@ describe('mockServer', () => {
     `;
 
     describe('Queried fields', () => {
-      it('Does not raise an error when there is no base mock for a field that is an object', async () => {
+      it('Does not raise an error when there is no base mock for a field that is an object', () => {
         const mocks = {
           Query: {
             // object is not defined
@@ -598,7 +653,7 @@ describe('mockServer', () => {
 
         const server = mockServer(schemaDefinition, mocks);
 
-        const result = await server(`
+        const result = server(`
           query test {
             object {
               property
@@ -607,7 +662,7 @@ describe('mockServer', () => {
         `);
       });
 
-      it('Does not raise an error when there is no base mock for a field that is a non-null object', async () => {
+      it('Does not raise an error when there is no base mock for a field that is a non-null object', () => {
         const mocks = {
           Query: {
             // listOfObjects is not defined
@@ -619,16 +674,16 @@ describe('mockServer', () => {
 
         const server = mockServer(schemaDefinition, mocks);
 
-        const result = await server(`
+        const result = server(`
           query test {
             nonNullObject {
-              proeprty
+              property
             }
           }
         `);
       });
 
-      it('Does not raise an error when there is no base mock for a field that is a list of objects', async () => {
+      it('Does not raise an error when there is no base mock for a field that is a list of objects', () => {
         const mocks = {
           Query: {
             // listOfObjects is not defined
@@ -640,7 +695,7 @@ describe('mockServer', () => {
 
         const server = mockServer(schemaDefinition, mocks);
 
-        await server(`
+        server(`
           query test {
             listOfObjects {
               property
@@ -649,12 +704,12 @@ describe('mockServer', () => {
         `);
       });
 
-      it('Raises an error when there is no base mock for a field that is a scalar', async () => {
+      it('Raises an error when there is no base mock for a field that is a scalar', () => {
         const server = mockServer(schemaDefinition, {});
 
         expect.assertions(1);
         try {
-          await server(`
+          server(`
             query test {
               scalar
             }
@@ -667,12 +722,12 @@ describe('mockServer', () => {
         }
       });
 
-      it('Raises an error when there is no base mock for a field that is a non-null scalar', async () => {
+      it('Raises an error when there is no base mock for a field that is a non-null scalar', () => {
         const server = mockServer(schemaDefinition, {});
 
         expect.assertions(1);
         try {
-          await server(`
+          server(`
             query test {
               nonNullScalar
             }
@@ -685,12 +740,12 @@ describe('mockServer', () => {
         }
       });
 
-      it('Raises an error when there is no base mock for a field that is a list of scalars', async () => {
+      it('Raises an error when there is no base mock for a field that is a list of scalars', () => {
         const server = mockServer(schemaDefinition, {});
 
         expect.assertions(1);
         try {
-          await server(`
+          server(`
             query test {
               listOfScalars
             }
@@ -704,7 +759,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Raises an error when there is mock for a type that does not exist', async () => {
+    it('Raises an error when there is mock for a type that does not exist', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -717,7 +772,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Raises an error when the baseMock is not an object of objects', async () => {
+    it('Raises an error when the baseMock is not an object of objects', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -730,7 +785,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Raises an error when there is a mock for a field that does not exist ', async () => {
+    it('Raises an error when there is a mock for a field that does not exist ', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -745,7 +800,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Raises an error when there is a mock for a type that that is not a object or interface ', async () => {
+    it('Raises an error when there is a mock for a type that that is not a object or interface ', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -760,7 +815,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Raises an error when the baseMock is not an object of objects of funtions', async () => {
+    it('Raises an error when the baseMock is not an object of objects of funtions', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -776,7 +831,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Raises an error when a base mock returns an array', async () => {
+    it('Raises an error when a base mock returns an array', () => {
       const mocks = {
         Query: {
           listOfObjects: () => []
@@ -791,7 +846,7 @@ describe('mockServer', () => {
 
       expect.assertions(1);
       try {
-        await server(`
+        server(`
           query test {
             listOfObjects {
               property 
@@ -848,7 +903,7 @@ describe('mockServer', () => {
       }
     `;
 
-    it('Raises an error when there is a mock defined for the field of an interface that is an object', async () => {
+    it('Raises an error when there is a mock defined for the field of an interface that is an object', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -863,7 +918,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Raises an error when there is a mock defined for the field of an interface that is a non-null object', async () => {
+    it('Raises an error when there is a mock defined for the field of an interface that is a non-null object', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -878,7 +933,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Raises an error when there is a mock defined for the field of an interface that is a list of objects', async () => {
+    it('Raises an error when there is a mock defined for the field of an interface that is a list of objects', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -893,7 +948,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Does not raises an error when there is a mock defined for the field of an interface that is a scalar', async () => {
+    it('Does not raises an error when there is a mock defined for the field of an interface that is a scalar', () => {
       mockServer(schemaDefinition, {
         ObjectInterface: {
           scalar: () => {}
@@ -901,7 +956,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Does not raises an error when there is a mock defined for the field of an interface that is a non-null scalar', async () => {
+    it('Does not raises an error when there is a mock defined for the field of an interface that is a non-null scalar', () => {
       mockServer(schemaDefinition, {
         ObjectInterface: {
           nonNullScalar: () => {}
@@ -909,7 +964,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Raises an error when there is a mock defined for the field of an interface that is a list of scalars', async () => {
+    it('Raises an error when there is a mock defined for the field of an interface that is a list of scalars', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -924,7 +979,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Falls back to the interface mock if there is one', async () => {
+    it('Falls back to the interface mock if there is one', () => {
       const mocks = {
         ObjectInterface: {
           scalar: () => 'ObjectInterface.scalar'
@@ -933,7 +988,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           object {
             scalar
@@ -950,7 +1005,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Ignores the interface mocks for a field if there more than one interface defining the field', async () => {
+    it('Ignores the interface mocks for a field if there more than one interface defining the field', () => {
       const mocks = {
         ObjectInterface: {
           scalar: () => 'ObjectInterface.scalar'
@@ -961,7 +1016,7 @@ describe('mockServer', () => {
 
       expect.assertions(1);
       try {
-        await server(`
+        server(`
           query test {
             objectWith2Interfaces {
               scalar
@@ -1013,7 +1068,7 @@ describe('mockServer', () => {
       }
     `;
 
-    it('Returns an obvious error when both first and last are set', async () => {
+    it('Returns an obvious error when both first and last are set', () => {
       const mocks = {
         Query: {
           objectConnection: mockRelayConnection()
@@ -1025,7 +1080,7 @@ describe('mockServer', () => {
 
       // $FlowFixMe It seems to happen because it is the first test of this `describe` block...
       const server = mockServer(schemaDefinition, mocks);
-      const result = await server(`
+      const result = server(`
         query test {
           objectConnection(last: 1, first: 3) {
             edges {
@@ -1042,7 +1097,7 @@ describe('mockServer', () => {
       );
     });
 
-    it('Is possible to override errors by specifying all queried relay fields', async () => {
+    it('Is possible to override errors by specifying all queried relay fields', () => {
       const mocks = {
         Query: {
           objectConnection: mockRelayConnection()
@@ -1060,7 +1115,7 @@ describe('mockServer', () => {
       };
 
       const server = mockServer(schemaDefinition, mocks);
-      const result = await server(
+      const result = server(
         `
         query test {
           objectConnection(last: 1, first: 3) {
@@ -1097,7 +1152,7 @@ describe('mockServer', () => {
       expect(result.errors).toBeUndefined();
     });
 
-    it('Returns the right number of items when first or last are set', async () => {
+    it('Returns the right number of items when first or last are set', () => {
       const mocks = {
         Query: {
           objectConnection: mockRelayConnection()
@@ -1128,14 +1183,14 @@ describe('mockServer', () => {
         }
       `;
 
-      let result = await server(query, { first: 3 });
+      let result = server(query, { first: 3 });
       expect(_.at(result, 'data.objectConnection.edges')[0]).toHaveLength(3);
       expect(_.at(result, 'data.objectConnection.pageInfo')[0]).toEqual({
         hasNextPage: true,
         hasPreviousPage: false
       });
 
-      result = await server(query, { last: 1 });
+      result = server(query, { last: 1 });
       expect(_.at(result, 'data.objectConnection.edges')[0]).toHaveLength(1);
       expect(_.at(result, 'data.objectConnection.pageInfo')[0]).toEqual({
         hasNextPage: false,
@@ -1143,7 +1198,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Returns no more than the totalSize of items', async () => {
+    it('Returns no more than the totalSize of items', () => {
       const mocks = {
         Query: {
           objectConnection: mockRelayConnection({ maxSize: 2 })
@@ -1174,7 +1229,7 @@ describe('mockServer', () => {
         }
       `;
 
-      let result = await server(query, { first: 3 });
+      let result = server(query, { first: 3 });
       expect(result.errors).toBeUndefined();
       expect(_.at(result, 'data.objectConnection.edges')[0]).toHaveLength(2);
       expect(_.at(result, 'data.objectConnection.pageInfo')[0]).toEqual({
@@ -1182,7 +1237,7 @@ describe('mockServer', () => {
         hasPreviousPage: false
       });
 
-      result = await server(query, { last: 3 });
+      result = server(query, { last: 3 });
       expect(result.errors).toBeUndefined();
       expect(_.at(result, 'data.objectConnection.edges')[0]).toHaveLength(2);
       expect(_.at(result, 'data.objectConnection.pageInfo')[0]).toEqual({
@@ -1191,7 +1246,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Allows to specify mocks for the nodes', async () => {
+    it('Allows to specify mocks for the nodes', () => {
       const mocks = {
         Query: {
           objectConnection: mockRelayConnection({
@@ -1207,7 +1262,7 @@ describe('mockServer', () => {
 
       const server = mockServer(schemaDefinition, mocks);
 
-      const result = await server(`
+      const result = server(`
         query test {
           objectConnection(first: 2, argument: "ARGUMENT") {
             edges {

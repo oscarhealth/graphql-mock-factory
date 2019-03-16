@@ -1,7 +1,7 @@
 // @flow
 import { buildSchemaFromTypeDefinitions } from 'graphql-tools';
 import {
-  graphql,
+  graphqlSync,
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLEnumType,
@@ -61,8 +61,8 @@ export function mockServer(schemaDefinition: string, baseMocks: MockMap) {
     field.resolve = getFieldResolver(type, field, baseMocks);
   });
 
-  return async (query: string, vars: Object = {}, queryMock: Object = {}) => {
-    const result = await graphql(schema, query, queryMock, {}, vars);
+  return (query: string, vars: Object = {}, queryMock: Object = {}) => {
+    const result = graphqlSync(schema, query, queryMock, {}, vars);
     throwUnexpectedErrors(result);
     return result;
   };
@@ -73,9 +73,11 @@ function getFieldResolver(
   field: GraphQLField<{ [string]: QueryMockPrimitive }, mixed>,
   baseMocks: MockMap
 ): GraphQLFieldResolver<{ [string]: QueryMockPrimitive }, mixed> {
-  return markUnexpectedErrors((source, args) => {
+  return markUnexpectedErrors((source, args, context, info) => {
     const baseMock = getFieldMock(type, field, baseMocks);
-    const mergedValue = mergeMocks(baseMock, source[field.name])(args);
+    const fieldName =
+      typeof info.path.key === 'string' ? info.path.key : field.name;
+    const mergedValue = mergeMocks(baseMock, source[fieldName])(args);
 
     if (mergedValue === undefined) {
       return {};
@@ -250,8 +252,8 @@ function mergeMocks(baseMock: BaseMock, overrideMock: QueryMock) {
     }
 
     const mergedMockObject = {};
-    const mergedObjectObjectKeys = Object.keys(overrideMockValue).concat(
-      Object.keys(baseMockValue)
+    const mergedObjectObjectKeys = new Set(
+      Object.keys(overrideMockValue).concat(Object.keys(baseMockValue))
     );
     const overrideMockValueCopy = overrideMockValue;
     const baseMockValueCopy = baseMockValue;
