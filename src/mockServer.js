@@ -62,11 +62,22 @@ export function mockServer(schemaDefinition: string, baseMocks: MockMap) {
   });
 
   return (query: string, vars: Object = {}, queryMock: Object = {}) => {
-    const result = graphqlSync(schema, query, queryMock, {}, vars);
+    const result = graphqlSync(
+      schema,
+      query,
+      { queryMock: queryMock },
+      {},
+      vars
+    );
     throwUnexpectedErrors(result);
     return result;
   };
 }
+
+type Root = {|
+  queryMock: any,
+  parentMock: any
+|};
 
 function getFieldResolver(
   type: GraphQLObjectType,
@@ -75,77 +86,81 @@ function getFieldResolver(
 ): GraphQLFieldResolver<{ [string]: QueryMockPrimitive }, mixed> {
   return markUnexpectedErrors((source, args, context, info) => {
     const baseMock = getFieldMock(type, field, baseMocks);
+    const parentMock = source.parentMock && source.parentMock[field.name];
+
+    const mergedBaseMocksValue = mergeBaseMocks(baseMock, parentMock)(args);
+
     const fieldName =
       typeof info.path.key === 'string' ? info.path.key : field.name;
-    const mergedValue = mergeMocks(baseMock, source[fieldName])(args);
+    const queryMockValue = source.queryMock
+      ? getMockValue(source.queryMock[fieldName], args)
+      : undefined;
 
-    if (mergedValue === undefined) {
-      return {};
+    const nullableFieldType = getNullableType(field.type);
+    const namedType = getNamedType(field.type);
+
+    if (!(nullableFieldType instanceof GraphQLList)) {
+      // TODO remove args?
+      return mergeMockValues(mergedBaseMocksValue, queryMockValue, namedType);
     }
 
-    if (mergedValue instanceof MockList) {
-      const mergedArray = [];
-      for (let index = 0; index < mergedValue.length; index++) {
-        mergedArray.push(mergedValue.mockFunction(args, index));
-      }
-      return mergedArray;
+    if (!(mergedBaseMocksValue instanceof MockList)) {
+      // TODO Add validation that each list must have a mock function
+      throw 'not possible';
     }
 
-    return mergedValue;
+    if (queryMockValue === null || queryMockValue instanceof Error) {
+      return queryMockValue;
+    }
+
+    const mergedArray = [];
+    let queryMockList = queryMockValue;
+
+    if (Array.isArray(queryMockList)) {
+      const queryMockArray = queryMockList;
+      queryMockList = new MockList(
+        queryMockArray.length,
+        ({}, index) => queryMockArray[index]
+      );
+    }
+
+    if (queryMockValue === undefined) {
+      queryMockList = new MockList(mergedBaseMocksValue.length, () => {});
+    }
+
+    for (let index = 0; index < queryMockList.length; index++) {
+      const mockListItemValue = mergedBaseMocksValue.mockFunction(args, index);
+      const queryMockListItemValue = queryMockList.mockFunction(args, index);
+      mergedArray.push(
+        mergeMockValues(mockListItemValue, queryMockListItemValue, namedType)
+      );
+    }
+    return mergedArray;
   });
 }
 
-function getFieldMock(
-  type: GraphQLObjectType,
-  field: GraphQLField<any, any, any>,
-  baseMocks: MockMap
-): MockFunction<BaseMockPrimitive> | void {
-  let baseMock;
-  if (baseMocks[type.name]) {
-    baseMock = baseMocks[type.name][field.name];
+function mergeMockValues(baseMockValue, queryMockValue, namedType) {
+  if (queryMockValue === null) {
+    return null;
   }
 
-  if (baseMock) {
-    return baseMock;
-  }
-
-  const fieldInterfaces = [];
-  type.getInterfaces().forEach(parentInterface => {
-    if (parentInterface.getFields()[field.name]) {
-      fieldInterfaces.push(parentInterface.name);
+  if (isLeafType(namedType)) {
+    if (queryMockValue === undefined) {
+      return baseMockValue;
     }
-  });
 
-  if (fieldInterfaces.length > 1) {
-    throw Error(
-      'More than 1 interface for this field. Define base mock on the type.'
-    );
+    return queryMockValue;
   }
 
-  if (fieldInterfaces.length === 1) {
-    if (
-      baseMocks[fieldInterfaces[0]] &&
-      baseMocks[fieldInterfaces[0]][field.name]
-    ) {
-      return baseMocks[fieldInterfaces[0]][field.name];
-    }
-  }
-
-  if (isLeafType(getNamedType(field.type))) {
-    throw Error(
-      `There is no base mock for '${type.name}.${field.name}'. ` +
-        `All queried fields must have a base mock.`
-    );
-  }
+  return {
+    queryMock: queryMockValue,
+    parentMock: baseMockValue
+  };
 }
 
-function mergeMocks(baseMock: BaseMock, overrideMock: QueryMock) {
+function mergeBaseMocks(baseMock: BaseMock, overrideMock: QueryMockPrimitive) {
   return function(...args: Array<mixed>) {
-    let overrideMockValue =
-      typeof overrideMock === 'function'
-        ? // $FlowFixMe
-          overrideMock(...args)
-        : overrideMock;
+    let overrideMockValue = getMockValue(overrideMock, ...args);
 
     if (
       overrideMockValue === null ||
@@ -157,17 +172,14 @@ function mergeMocks(baseMock: BaseMock, overrideMock: QueryMock) {
       return overrideMockValue;
     }
 
-    let baseMockValue =
-      typeof baseMock === 'function'
-        ? // $FlowFixMe
-          baseMock(...args)
-        : baseMock;
+    let baseMockValue = getMockValue(baseMock, ...args);
 
     if (Array.isArray(baseMockValue)) {
       throw Error('baseMocks must not return arrays or nested arrays.');
     }
 
     if (baseMockValue === null) {
+      // TODO Should we prevent bases from returning null
       return null;
     }
 
@@ -207,24 +219,15 @@ function mergeMocks(baseMock: BaseMock, overrideMock: QueryMock) {
         throw Error('better error 1');
       }
 
-      if (Array.isArray(overrideMockList)) {
-        const overrideArray = overrideMockList;
-
-        overrideMockList = new MockList(
-          overrideArray.length,
-          ({}, index) => overrideArray[index]
-        );
-      }
-
       if (overrideMockList === undefined) {
-        overrideMockList = new MockList(baseMockValue.length);
+        return baseMockValue;
       }
 
       const overrideMockListFunction = overrideMockList.mockFunction;
       const baseMockListFunction = baseMockList.mockFunction;
 
       return new MockList(overrideMockList.length, (args, index) => {
-        return mergeMocks(baseMockListFunction, overrideMockListFunction)(
+        return mergeBaseMocks(baseMockListFunction, overrideMockListFunction)(
           args,
           index
         );
@@ -239,6 +242,7 @@ function mergeMocks(baseMock: BaseMock, overrideMock: QueryMock) {
       throw Error('Not the same type');
     }
 
+    // TODO Add validation that base cannot return Error
     if (baseMockValue instanceof Error) {
       if (overrideMockValue === undefined) {
         return baseMockValue;
@@ -259,14 +263,70 @@ function mergeMocks(baseMock: BaseMock, overrideMock: QueryMock) {
     const baseMockValueCopy = baseMockValue;
     mergedObjectObjectKeys.forEach(key => {
       mergedMockObject[key] = (...mergedMockArgs) => {
-        return mergeMocks(baseMockValueCopy[key], overrideMockValueCopy[key])(
-          ...mergedMockArgs
-        );
+        return mergeBaseMocks(
+          baseMockValueCopy[key],
+          overrideMockValueCopy[key]
+        )(...mergedMockArgs);
       };
     });
 
     return mergedMockObject;
   };
+}
+
+function getMockValue(mock, ...args) {
+  return typeof mock === 'function' ? mock(...args) : mock;
+}
+
+function getFieldMock(
+  type: GraphQLObjectType,
+  field: GraphQLField<any, any, any>,
+  baseMocks: MockMap
+): MockFunction<BaseMockPrimitive> | void {
+  let baseMock;
+  if (baseMocks[type.name]) {
+    baseMock = baseMocks[type.name][field.name];
+  }
+
+  if (baseMock) {
+    return baseMock;
+  }
+
+  const fieldInterfaces = [];
+  type.getInterfaces().forEach(parentInterface => {
+    if (parentInterface.getFields()[field.name]) {
+      fieldInterfaces.push(parentInterface.name);
+    }
+  });
+
+  if (fieldInterfaces.length > 1) {
+    throw Error(
+      'More than 1 interface for this field. Define base mock on the type.'
+    );
+  }
+
+  if (fieldInterfaces.length === 1) {
+    if (
+      baseMocks[fieldInterfaces[0]] &&
+      baseMocks[fieldInterfaces[0]][field.name]
+    ) {
+      return baseMocks[fieldInterfaces[0]][field.name];
+    }
+  }
+
+  if (getNullableType(field.type) instanceof GraphQLList) {
+    throw Error(
+      `There is no base mock for '${type.name}.${field.name}'. ` +
+        `All queried list fields must have a base mock defined using mockList.`
+    );
+  }
+
+  if (isLeafType(getNamedType(field.type))) {
+    throw Error(
+      `There is no base mock for '${type.name}.${field.name}'. ` +
+        `All queried fields must have a base mock.`
+    );
+  }
 }
 
 type MockListFunction<T> = ({ [string]: any }, number) => T;
@@ -277,8 +337,6 @@ class MockList<T: BaseMockPrimitive | QueryMockPrimitive> {
 
   constructor(length: number, mockFunction?: MockListFunction<T>): void {
     this.length = length;
-    if (!mockFunction) return;
-
     // https://stackoverflow.com/questions/54873504/how-to-type-a-generic-function-that-returns-subtypes
     // $FlowFixMe Figure out to parameterize this generic class and default to () => ({})
     this.mockFunction = mockFunction ? mockFunction : () => ({});
@@ -350,6 +408,8 @@ function markUnexpectedErrors(
     try {
       return fieldResolver(...args);
     } catch (error) {
+      // throw error;
+      console.log(error.stack);
       throw new MockError(error);
     }
   };
