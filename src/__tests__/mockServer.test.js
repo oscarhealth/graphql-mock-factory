@@ -263,73 +263,6 @@ describe('mockServer', () => {
       });
     });
 
-    it('Returns null when mock return null', () => {
-      const mocks = {
-        Query: {
-          object: () => ({
-            property: null
-          })
-        },
-        Object: {
-          property: () => 'Object.property',
-          property2: () => null
-        }
-      };
-
-      const server = mockServer(schemaDefinition, mocks);
-
-      const result = server(`
-        query test {
-          object {
-            property
-            property2
-          }
-        }
-      `);
-
-      expect(result).toEqual({
-        data: {
-          object: {
-            property: null,
-            property2: null
-          }
-        }
-      });
-    });
-
-    it('Returns an error payload when mocks return an error', () => {
-      const mocks = {
-        Query: {
-          object: () => ({
-            property: Error()
-          })
-        },
-        Object: {
-          property: () => 'Object.property',
-          property2: () => Error()
-        }
-      };
-
-      const server = mockServer(schemaDefinition, mocks);
-
-      const result = server(`
-        query test {
-          object {
-            property
-            property2
-          }
-        }
-      `);
-
-      expect(result.data).toEqual({
-        object: {
-          property: null,
-          property2: null
-        }
-      });
-      expect(result.errors).toHaveLength(2);
-    });
-
     it('Does a deep merge mocked lists', () => {
       const mocks = {
         Query: {
@@ -380,6 +313,79 @@ describe('mockServer', () => {
     });
 
     describe('queryMock parameter', () => {
+      it('Returns null when a value is set to null', () => {
+        const mocks = {
+          Object: {
+            property: () => 'Object.property',
+            property2: () => 'Object.property2'
+          }
+        };
+
+        const server = mockServer(schemaDefinition, mocks);
+
+        const result = server(
+          `
+          query test {
+            object {
+              property
+              property2
+            }
+          }
+        `,
+          {},
+          {
+            object: {
+              property: null
+            }
+          }
+        );
+
+        expect(result).toEqual({
+          data: {
+            object: {
+              property: null,
+              property2: 'Object.property2'
+            }
+          }
+        });
+      });
+
+      it('Returns an error payload when mocks return an error', () => {
+        const mocks = {
+          Object: {
+            property: () => 'Object.property'
+          }
+        };
+
+        const server = mockServer(schemaDefinition, mocks);
+
+        const result = server(
+          `
+          query test {
+            object {
+              property
+            }
+          }
+        `,
+          {},
+          {
+            object: {
+              property: Error('querMock.object.property.Error')
+            }
+          }
+        );
+
+        expect(result.data).toEqual({
+          object: {
+            property: null
+          }
+        });
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors && result.errors[0].message).toBe(
+          'querMock.object.property.Error'
+        );
+      });
+
       it('Does a deep merge similar to overriding mocks', () => {
         const mocks = {
           Query: {
@@ -433,7 +439,7 @@ describe('mockServer', () => {
         });
       });
 
-      fit('Allows arrays as overrides', () => {
+      it('Allows arrays as overrides', () => {
         const mocks = {
           Query: {
             listOfObjects: mockList(2)
@@ -701,7 +707,7 @@ describe('mockServer', () => {
             // object is not defined
           },
           Object: {
-            property: () => {}
+            property: () => 'Object.property'
           }
         };
 
@@ -722,7 +728,7 @@ describe('mockServer', () => {
             // listOfObjects is not defined
           },
           Object: {
-            property: () => {}
+            property: () => 'Object.property'
           }
         };
 
@@ -844,7 +850,258 @@ describe('mockServer', () => {
       }
     });
 
-    it('Raises an error when there is a mock for a type that that is not a object or interface ', () => {
+    it('Raises an error when a base mock returns null', () => {
+      const baseMocks = {
+        Object: {
+          property: () => null
+        }
+      };
+
+      const server = mockServer(schemaDefinition, baseMocks);
+
+      expect.assertions(1);
+      try {
+        server(`
+          query test {
+            object {
+              property
+            }
+          }
+        `);
+      } catch (error) {
+        expect(error.message).toBe(
+          "Error: Base mock for 'Object.property' returned 'null' for path ''.\n" +
+            "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+        );
+      }
+    });
+
+    it('Raises an error when a base mock returns a non-nested undefined', () => {
+      const baseMocks = {
+        Object: {
+          property: () => {}
+        }
+      };
+
+      const server = mockServer(schemaDefinition, baseMocks);
+
+      expect.assertions(1);
+      try {
+        server(`
+          query test {
+            object {
+              property
+            }
+          }
+        `);
+      } catch (error) {
+        expect(error.message).toBe(
+          "Error: Base mock for 'Object.property' returned 'undefined'.\n" +
+            "Base mocks are not allowed to return 'undefined'. Return a value compatible with type 'String'."
+        );
+      }
+    });
+
+    it('Raises an error when a base mock for a leaf field returns an invalid value.', () => {
+      const baseMocks = {
+        Query: {
+          scalar: () => ({})
+        }
+      };
+
+      const server = mockServer(schemaDefinition, baseMocks);
+
+      expect.assertions(1);
+      try {
+        server(`
+          query test {
+            scalar
+          }
+        `);
+      } catch (error) {
+        expect(error.message).toBe(
+          "Error: Base mock for 'Query.scalar' returned an invalid value for path ''.\n" +
+            "Value '[object Object]' is incompatible with type 'Int'."
+        );
+      }
+    });
+
+    it('Raises an error when a base mock for an object field returns an invalid value.', () => {
+      const baseMocks = {
+        Query: {
+          nonNullObject: () => 0
+        }
+      };
+
+      const server = mockServer(schemaDefinition, baseMocks);
+
+      expect.assertions(1);
+      try {
+        server(`
+          query test {
+            nonNullObject {
+              property
+            }
+          }
+        `);
+      } catch (error) {
+        expect(error.message).toBe(
+          "Error: Base mock for 'Query.nonNullObject' did not return an object for path ''.\n" +
+            "Value '0' is incompatible with type 'Object'."
+        );
+      }
+    });
+
+    it('Raises an error when a base mock for a list field returns an invalid value.', () => {
+      const baseMocks = {
+        Query: {
+          listOfObjects: () => ({})
+        },
+        Object: {
+          property: () => 'Object.property'
+        }
+      };
+
+      const server = mockServer(schemaDefinition, baseMocks);
+
+      expect.assertions(1);
+      try {
+        server(`
+          query test {
+            listOfObjects {
+              property
+            }
+          }
+        `);
+      } catch (error) {
+        expect(error.message).toBe(
+          "Error: Base mock for 'Query.listOfObjects' did not return a MockList for path ''.\n" +
+            "Use 'mockList' function to mock lists in base mocks."
+        );
+      }
+    });
+
+    it('Raises an error when a base mock returns an error.', () => {
+      const baseMocks = {
+        Query: {
+          scalar: () => Error('Query.scalar.Error')
+        }
+      };
+
+      const server = mockServer(schemaDefinition, baseMocks);
+
+      expect.assertions(1);
+      try {
+        const data = server(`
+          query test {
+            scalar
+          }
+        `);
+      } catch (error) {
+        expect(error.message).toBe(
+          "Error: Base mock for 'Query.scalar' returned an error for path ''.\n" +
+            "Base mocks are not allowed to return 'Error' values. Use 'queryMock' to specify 'Error' values instead."
+        );
+      }
+    });
+
+    it('Raises an error when a base mock returns a nested field that does not exist', () => {
+      const baseMocks = {
+        Query: {
+          object: () => ({
+            doesNotExist: () => {}
+          })
+        },
+        Object: {
+          property: () => {}
+        }
+      };
+
+      const server = mockServer(schemaDefinition, baseMocks);
+
+      expect.assertions(1);
+      try {
+        server(`
+          query test {
+            object {
+              property
+            }
+          }
+        `);
+      } catch (error) {
+        expect(error.message).toBe(
+          "Error: Base mock for 'Query.object' returns a value " +
+            "for field path 'doesNotExist' that does not exist. " +
+            'Base mocks should return values only for valid fields.'
+        );
+      }
+    });
+
+    it('Validates the object nested values returned by a base mock', () => {
+      // We use "Raises an error when a base mock returns null" as an example
+      const baseMocks = {
+        Query: {
+          object: () => ({
+            property: null
+          })
+        },
+        Object: {
+          property: () => 'Object.property'
+        }
+      };
+
+      const server = mockServer(schemaDefinition, baseMocks);
+
+      expect.assertions(1);
+      try {
+        server(`
+          query test {
+            object {
+              property
+            }
+          }
+        `);
+      } catch (error) {
+        expect(error.message).toBe(
+          "Error: Base mock for 'Query.object' returned 'null' for path 'property'.\n" +
+            "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+        );
+      }
+    });
+
+    it('Validates the mock list nested values returned by a base mock', () => {
+      // We use "Raises an error when a base mock returns null" as an example
+      const baseMocks = {
+        Query: {
+          listOfObjects: mockList(2, () => ({
+            property: null
+          }))
+        },
+        Object: {
+          property: () => 'Object.property'
+        }
+      };
+
+      const server = mockServer(schemaDefinition, baseMocks);
+
+      expect.assertions(1);
+      try {
+        server(`
+          query test {
+            listOfObjects {
+              property
+            }
+          }
+        `);
+      } catch (error) {
+        expect(error.message).toBe(
+          "Error: Base mock for 'Query.listOfObjects' returned 'null' for path '0.property'.\n" +
+            "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+        );
+      }
+    });
+
+    it('Raises an error when there is a mock object for a type that that is not a object or interface ', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -871,35 +1128,6 @@ describe('mockServer', () => {
       } catch (error) {
         expect(error.message).toBe(
           'baseMocks should be an object of object of functions.'
-        );
-      }
-    });
-
-    it('Raises an error when a base mock returns an array', () => {
-      const mocks = {
-        Query: {
-          listOfObjects: () => []
-        },
-        Object: {
-          property: () => 'Object.property'
-        }
-      };
-
-      // $FlowFixMe This error is expected
-      const server = mockServer(schemaDefinition, mocks);
-
-      expect.assertions(1);
-      try {
-        server(`
-          query test {
-            listOfObjects {
-              property 
-            }
-          }
-        `);
-      } catch (error) {
-        expect(error.message).toBe(
-          'Error: baseMocks must not return arrays or nested arrays.'
         );
       }
     });
