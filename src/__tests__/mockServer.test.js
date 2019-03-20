@@ -1,12 +1,6 @@
 // @flow
 import _ from 'lodash';
-import { mockServer, mockList, mockRelayConnection } from '../mockServer';
-
-/* 
-TODO
-- Add test for helpful error when using promise
-  https://github.com/graphql/graphql-js/pull/1115
-*/
+import { mockServer, mockList } from '../mockServer';
 
 describe('mockServer', () => {
   describe('Mock precedence rules', () => {
@@ -676,7 +670,7 @@ describe('mockServer', () => {
     });
   });
 
-  describe('Validations', () => {
+  describe('Input validation', () => {
     const schemaDefinition = `
       schema {
         query: Query
@@ -700,7 +694,79 @@ describe('mockServer', () => {
       }
     `;
 
-    describe('Queried fields', () => {
+    describe('baseMocks object', () => {
+      it('Throws an error when there is mock for a type that does not exist', () => {
+        expect.assertions(1);
+        try {
+          mockServer(schemaDefinition, {
+            DoesNotExist: {}
+          });
+        } catch (error) {
+          expect(error.message).toBe(
+            "baseMocks['DoesNotExist'] is not defined in schema."
+          );
+        }
+      });
+
+      it('Throws an error when the baseMock is not an object of objects', () => {
+        expect.assertions(1);
+        try {
+          mockServer(schemaDefinition, {
+            Object: () => {}
+          });
+        } catch (error) {
+          expect(error.message).toBe(
+            'baseMocks should be an object of object of functions.'
+          );
+        }
+      });
+
+      it('Throws an error when there is a mock for a field that does not exist ', () => {
+        expect.assertions(1);
+        try {
+          mockServer(schemaDefinition, {
+            Object: {
+              doesNotExist: () => {}
+            }
+          });
+        } catch (error) {
+          expect(error.message).toBe(
+            "baseMocks['Object']['doesNotExist'] is not defined in schema."
+          );
+        }
+      });
+
+      it('Throws an error when there is a mock object for a type that that is not a object or interface ', () => {
+        expect.assertions(1);
+        try {
+          mockServer(schemaDefinition, {
+            Enum: {
+              VALUE: () => {}
+            }
+          });
+        } catch (error) {
+          expect(error.message).toBe(
+            'baseMock can only define field mocks on Type or Interface.'
+          );
+        }
+      });
+
+      it('Throws an error when the baseMock is not an object of objects of funtions', () => {
+        expect.assertions(1);
+        try {
+          mockServer(schemaDefinition, {
+            Object: {
+              // $FlowFixMe This error is expected
+              property: {}
+            }
+          });
+        } catch (error) {
+          expect(error.message).toBe(
+            'baseMocks should be an object of object of functions.'
+          );
+        }
+      });
+
       it('Does not raise an error when there is no base mock for a field that is an object', () => {
         const mocks = {
           Query: {
@@ -743,7 +809,7 @@ describe('mockServer', () => {
         `);
       });
 
-      it('Raises an error when there is no base mock for a field that is a list', () => {
+      it('Throws an error when there is no base mock for a field that is a list', () => {
         const mocks = {
           Query: {
             // listOfObjects is not defined
@@ -766,13 +832,13 @@ describe('mockServer', () => {
           `);
         } catch (error) {
           expect(error.message).toBe(
-            "Error: There is no base mock for 'Query.listOfObjects'. " +
+            "There is no base mock for 'Query.listOfObjects'. " +
               'All queried list fields must have a base mock defined using mockList.'
           );
         }
       });
 
-      it('Raises an error when there is no base mock for a field that is a scalar', () => {
+      it('Throws an error when there is no base mock for a field that is a scalar', () => {
         const server = mockServer(schemaDefinition, {});
 
         expect.assertions(1);
@@ -784,13 +850,13 @@ describe('mockServer', () => {
           `);
         } catch (error) {
           expect(error.message).toBe(
-            "Error: There is no base mock for 'Query.scalar'. " +
+            "There is no base mock for 'Query.scalar'. " +
               'All queried fields must have a base mock.'
           );
         }
       });
 
-      it('Raises an error when there is no base mock for a field that is a non-null scalar', () => {
+      it('Throws an error when there is no base mock for a field that is a non-null scalar', () => {
         const server = mockServer(schemaDefinition, {});
 
         expect.assertions(1);
@@ -802,334 +868,298 @@ describe('mockServer', () => {
           `);
         } catch (error) {
           expect(error.message).toBe(
-            "Error: There is no base mock for 'Query.nonNullScalar'. " +
+            "There is no base mock for 'Query.nonNullScalar'. " +
               'All queried fields must have a base mock.'
           );
         }
       });
     });
 
-    it('Raises an error when there is mock for a type that does not exist', () => {
-      expect.assertions(1);
-      try {
-        mockServer(schemaDefinition, {
-          DoesNotExist: {}
-        });
-      } catch (error) {
-        expect(error.message).toBe(
-          "baseMocks['DoesNotExist'] is not defined in schema."
-        );
-      }
-    });
-
-    it('Raises an error when the baseMock is not an object of objects', () => {
-      expect.assertions(1);
-      try {
-        mockServer(schemaDefinition, {
-          Object: () => {}
-        });
-      } catch (error) {
-        expect(error.message).toBe(
-          'baseMocks should be an object of object of functions.'
-        );
-      }
-    });
-
-    it('Raises an error when there is a mock for a field that does not exist ', () => {
-      expect.assertions(1);
-      try {
-        mockServer(schemaDefinition, {
+    describe('baseMocks functions', () => {
+      it('Throws an error when a base mock returns null', () => {
+        const baseMocks = {
           Object: {
-            doesNotExist: () => {}
+            property: () => null
           }
-        });
-      } catch (error) {
-        expect(error.message).toBe(
-          "baseMocks['Object']['doesNotExist'] is not defined in schema."
-        );
-      }
-    });
+        };
 
-    it('Raises an error when a base mock returns null', () => {
-      const baseMocks = {
-        Object: {
-          property: () => null
-        }
-      };
+        const server = mockServer(schemaDefinition, baseMocks);
 
-      const server = mockServer(schemaDefinition, baseMocks);
-
-      expect.assertions(1);
-      try {
-        server(`
-          query test {
-            object {
-              property
+        expect.assertions(1);
+        try {
+          server(`
+            query test {
+              object {
+                property
+              }
             }
-          }
-        `);
-      } catch (error) {
-        expect(error.message).toBe(
-          "Error: Base mock for 'Object.property' returned 'null' for path ''.\n" +
-            "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
-        );
-      }
-    });
-
-    it('Raises an error when a base mock returns a non-nested undefined', () => {
-      const baseMocks = {
-        Object: {
-          property: () => {}
+          `);
+        } catch (error) {
+          expect(error.message).toBe(
+            "Base mock for 'Object.property' returned 'null' for path ''.\n" +
+              "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+          );
         }
-      };
+      });
 
-      const server = mockServer(schemaDefinition, baseMocks);
-
-      expect.assertions(1);
-      try {
-        server(`
-          query test {
-            object {
-              property
-            }
-          }
-        `);
-      } catch (error) {
-        expect(error.message).toBe(
-          "Error: Base mock for 'Object.property' returned 'undefined'.\n" +
-            "Base mocks are not allowed to return 'undefined'. Return a value compatible with type 'String'."
-        );
-      }
-    });
-
-    it('Raises an error when a base mock for a leaf field returns an invalid value.', () => {
-      const baseMocks = {
-        Query: {
-          scalar: () => ({})
-        }
-      };
-
-      const server = mockServer(schemaDefinition, baseMocks);
-
-      expect.assertions(1);
-      try {
-        server(`
-          query test {
-            scalar
-          }
-        `);
-      } catch (error) {
-        expect(error.message).toBe(
-          "Error: Base mock for 'Query.scalar' returned an invalid value for path ''.\n" +
-            "Value '[object Object]' is incompatible with type 'Int'."
-        );
-      }
-    });
-
-    it('Raises an error when a base mock for an object field returns an invalid value.', () => {
-      const baseMocks = {
-        Query: {
-          nonNullObject: () => 0
-        }
-      };
-
-      const server = mockServer(schemaDefinition, baseMocks);
-
-      expect.assertions(1);
-      try {
-        server(`
-          query test {
-            nonNullObject {
-              property
-            }
-          }
-        `);
-      } catch (error) {
-        expect(error.message).toBe(
-          "Error: Base mock for 'Query.nonNullObject' did not return an object for path ''.\n" +
-            "Value '0' is incompatible with type 'Object'."
-        );
-      }
-    });
-
-    it('Raises an error when a base mock for a list field returns an invalid value.', () => {
-      const baseMocks = {
-        Query: {
-          listOfObjects: () => ({})
-        },
-        Object: {
-          property: () => 'Object.property'
-        }
-      };
-
-      const server = mockServer(schemaDefinition, baseMocks);
-
-      expect.assertions(1);
-      try {
-        server(`
-          query test {
-            listOfObjects {
-              property
-            }
-          }
-        `);
-      } catch (error) {
-        expect(error.message).toBe(
-          "Error: Base mock for 'Query.listOfObjects' did not return a MockList for path ''.\n" +
-            "Use 'mockList' function to mock lists in base mocks."
-        );
-      }
-    });
-
-    it('Raises an error when a base mock returns an error.', () => {
-      const baseMocks = {
-        Query: {
-          scalar: () => Error('Query.scalar.Error')
-        }
-      };
-
-      const server = mockServer(schemaDefinition, baseMocks);
-
-      expect.assertions(1);
-      try {
-        const data = server(`
-          query test {
-            scalar
-          }
-        `);
-      } catch (error) {
-        expect(error.message).toBe(
-          "Error: Base mock for 'Query.scalar' returned an error for path ''.\n" +
-            "Base mocks are not allowed to return 'Error' values. Use 'queryMock' to specify 'Error' values instead."
-        );
-      }
-    });
-
-    it('Raises an error when a base mock returns a nested field that does not exist', () => {
-      const baseMocks = {
-        Query: {
-          object: () => ({
-            doesNotExist: () => {}
-          })
-        },
-        Object: {
-          property: () => {}
-        }
-      };
-
-      const server = mockServer(schemaDefinition, baseMocks);
-
-      expect.assertions(1);
-      try {
-        server(`
-          query test {
-            object {
-              property
-            }
-          }
-        `);
-      } catch (error) {
-        expect(error.message).toBe(
-          "Error: Base mock for 'Query.object' returns a value " +
-            "for field path 'doesNotExist' that does not exist. " +
-            'Base mocks should return values only for valid fields.'
-        );
-      }
-    });
-
-    it('Validates the object nested values returned by a base mock', () => {
-      // We use "Raises an error when a base mock returns null" as an example
-      const baseMocks = {
-        Query: {
-          object: () => ({
-            property: null
-          })
-        },
-        Object: {
-          property: () => 'Object.property'
-        }
-      };
-
-      const server = mockServer(schemaDefinition, baseMocks);
-
-      expect.assertions(1);
-      try {
-        server(`
-          query test {
-            object {
-              property
-            }
-          }
-        `);
-      } catch (error) {
-        expect(error.message).toBe(
-          "Error: Base mock for 'Query.object' returned 'null' for path 'property'.\n" +
-            "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
-        );
-      }
-    });
-
-    it('Validates the mock list nested values returned by a base mock', () => {
-      // We use "Raises an error when a base mock returns null" as an example
-      const baseMocks = {
-        Query: {
-          listOfObjects: mockList(2, () => ({
-            property: null
-          }))
-        },
-        Object: {
-          property: () => 'Object.property'
-        }
-      };
-
-      const server = mockServer(schemaDefinition, baseMocks);
-
-      expect.assertions(1);
-      try {
-        server(`
-          query test {
-            listOfObjects {
-              property
-            }
-          }
-        `);
-      } catch (error) {
-        expect(error.message).toBe(
-          "Error: Base mock for 'Query.listOfObjects' returned 'null' for path '0.property'.\n" +
-            "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
-        );
-      }
-    });
-
-    it('Raises an error when there is a mock object for a type that that is not a object or interface ', () => {
-      expect.assertions(1);
-      try {
-        mockServer(schemaDefinition, {
-          Enum: {
-            VALUE: () => {}
-          }
-        });
-      } catch (error) {
-        expect(error.message).toBe(
-          'baseMock can only define field mocks on Type or Interface.'
-        );
-      }
-    });
-
-    it('Raises an error when the baseMock is not an object of objects of funtions', () => {
-      expect.assertions(1);
-      try {
-        mockServer(schemaDefinition, {
+      it('Throws a validation error when a base mock throws an error', () => {
+        const baseMocks = {
           Object: {
-            // $FlowFixMe This error is expected
-            property: {}
+            property: () => {
+              throw Error('Object.property.throw');
+            }
           }
-        });
-      } catch (error) {
-        expect(error.message).toBe(
-          'baseMocks should be an object of object of functions.'
-        );
-      }
+        };
+
+        const server = mockServer(schemaDefinition, baseMocks);
+
+        expect.assertions(1);
+        try {
+          const data = server(`
+            query test {
+              object {
+                property
+              }
+            }
+          `);
+          console.error(data);
+        } catch (error) {
+          expect(error.message).toBe(
+            "Base mock for 'Object.property' threw an error for path ''.\n" +
+              'Base mocks are not allowed to throw errors. ' +
+              'In the rare case you actually want a base mock to return a GraphQL error, ' +
+              'have the base mock return an Error() instead of throwing one.'
+          );
+        }
+      });
+
+      it('Throws an error when a base mock returns a promise', () => {
+        const baseMocks = {
+          Object: {
+            property: () => new Promise(() => 'Object.property.Promise')
+          }
+        };
+
+        const server = mockServer(schemaDefinition, baseMocks);
+
+        expect.assertions(1);
+        try {
+          const data = server(`
+            query test {
+              object {
+                property
+              }
+            }
+          `);
+          console.error(data);
+        } catch (error) {
+          expect(error.message).toBe(
+            "Base mock for 'Object.property' returned a promise for path ''.\n" +
+              'Mock functions must be synchronous.'
+          );
+        }
+      });
+
+      it('Throws an error when a base mock returns a non-nested undefined', () => {
+        const baseMocks = {
+          Object: {
+            property: () => {}
+          }
+        };
+
+        const server = mockServer(schemaDefinition, baseMocks);
+
+        expect.assertions(1);
+        try {
+          server(`
+            query test {
+              object {
+                property
+              }
+            }
+          `);
+        } catch (error) {
+          expect(error.message).toBe(
+            "Base mock for 'Object.property' returned 'undefined'.\n" +
+              "Base mocks are not allowed to return 'undefined'. Return a value compatible with type 'String'."
+          );
+        }
+      });
+
+      it('Throws an error when a base mock for a leaf field returns an invalid value.', () => {
+        const baseMocks = {
+          Query: {
+            scalar: () => ({})
+          }
+        };
+
+        const server = mockServer(schemaDefinition, baseMocks);
+
+        expect.assertions(1);
+        try {
+          server(`
+            query test {
+              scalar
+            }
+          `);
+        } catch (error) {
+          expect(error.message).toBe(
+            "Base mock for 'Query.scalar' returned an invalid value for path ''.\n" +
+              "Value '[object Object]' is incompatible with type 'Int'."
+          );
+        }
+      });
+
+      it('Throws an error when a base mock for an object field returns an invalid value.', () => {
+        const baseMocks = {
+          Query: {
+            nonNullObject: () => 0
+          }
+        };
+
+        const server = mockServer(schemaDefinition, baseMocks);
+
+        expect.assertions(1);
+        try {
+          server(`
+            query test {
+              nonNullObject {
+                property
+              }
+            }
+          `);
+        } catch (error) {
+          expect(error.message).toBe(
+            "Base mock for 'Query.nonNullObject' did not return an object for path ''.\n" +
+              "Value '0' is incompatible with type 'Object'."
+          );
+        }
+      });
+
+      it('Throws an error when a base mock for a list field returns an invalid value.', () => {
+        const baseMocks = {
+          Query: {
+            listOfObjects: () => ({})
+          },
+          Object: {
+            property: () => 'Object.property'
+          }
+        };
+
+        const server = mockServer(schemaDefinition, baseMocks);
+
+        expect.assertions(1);
+        try {
+          server(`
+            query test {
+              listOfObjects {
+                property
+              }
+            }
+          `);
+        } catch (error) {
+          expect(error.message).toBe(
+            "Base mock for 'Query.listOfObjects' did not return a MockList for path ''.\n" +
+              "Use 'mockList' function to mock lists in base mocks."
+          );
+        }
+      });
+
+      it('Throws an error when a base mock returns a nested field that does not exist', () => {
+        const baseMocks = {
+          Query: {
+            object: () => ({
+              doesNotExist: () => {}
+            })
+          },
+          Object: {
+            property: () => {}
+          }
+        };
+
+        const server = mockServer(schemaDefinition, baseMocks);
+
+        expect.assertions(1);
+        try {
+          server(`
+            query test {
+              object {
+                property
+              }
+            }
+          `);
+        } catch (error) {
+          expect(error.message).toBe(
+            "Base mock for 'Query.object' returns a value " +
+              "for field path 'doesNotExist' that does not exist. " +
+              'Base mocks should return values only for valid fields.'
+          );
+        }
+      });
+
+      it('Validates the object nested values returned by a base mock', () => {
+        // We use "Throws an error when a base mock returns null" as an example
+        const baseMocks = {
+          Query: {
+            object: () => ({
+              property: null
+            })
+          },
+          Object: {
+            property: () => 'Object.property'
+          }
+        };
+
+        const server = mockServer(schemaDefinition, baseMocks);
+
+        expect.assertions(1);
+        try {
+          server(`
+            query test {
+              object {
+                property
+              }
+            }
+          `);
+        } catch (error) {
+          expect(error.message).toBe(
+            "Base mock for 'Query.object' returned 'null' for path 'property'.\n" +
+              "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+          );
+        }
+      });
+
+      it('Validates the mock list nested values returned by a base mock', () => {
+        // We use "Throws an error when a base mock returns null" as an example
+        const baseMocks = {
+          Query: {
+            listOfObjects: mockList(2, () => ({
+              property: null
+            }))
+          },
+          Object: {
+            property: () => 'Object.property'
+          }
+        };
+
+        const server = mockServer(schemaDefinition, baseMocks);
+
+        expect.assertions(1);
+        try {
+          server(`
+            query test {
+              listOfObjects {
+                property
+              }
+            }
+          `);
+        } catch (error) {
+          expect(error.message).toBe(
+            "Base mock for 'Query.listOfObjects' returned 'null' for path '0.property'.\n" +
+              "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+          );
+        }
+      });
     });
   });
 
@@ -1175,7 +1205,7 @@ describe('mockServer', () => {
       }
     `;
 
-    it('Raises an error when there is a mock defined for the field of an interface that is an object', () => {
+    it('Throws an error when there is a mock defined for the field of an interface that is an object', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -1190,7 +1220,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Raises an error when there is a mock defined for the field of an interface that is a non-null object', () => {
+    it('Throws an error when there is a mock defined for the field of an interface that is a non-null object', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -1205,7 +1235,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Raises an error when there is a mock defined for the field of an interface that is a list of objects', () => {
+    it('Throws an error when there is a mock defined for the field of an interface that is a list of objects', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -1220,7 +1250,7 @@ describe('mockServer', () => {
       }
     });
 
-    it('Does not raises an error when there is a mock defined for the field of an interface that is a scalar', () => {
+    it('Does not Throws an error when there is a mock defined for the field of an interface that is a scalar', () => {
       mockServer(schemaDefinition, {
         ObjectInterface: {
           scalar: () => {}
@@ -1228,7 +1258,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Does not raises an error when there is a mock defined for the field of an interface that is a non-null scalar', () => {
+    it('Does not Throws an error when there is a mock defined for the field of an interface that is a non-null scalar', () => {
       mockServer(schemaDefinition, {
         ObjectInterface: {
           nonNullScalar: () => {}
@@ -1236,7 +1266,7 @@ describe('mockServer', () => {
       });
     });
 
-    it('Raises an error when there is a mock defined for the field of an interface that is a list of scalars', () => {
+    it('Throws an error when there is a mock defined for the field of an interface that is a list of scalars', () => {
       expect.assertions(1);
       try {
         mockServer(schemaDefinition, {
@@ -1297,270 +1327,9 @@ describe('mockServer', () => {
         `);
       } catch (error) {
         expect(error.message).toBe(
-          'Error: More than 1 interface for this field. Define base mock on the type.'
+          'More than 1 interface for this field. Define base mock on the type.'
         );
       }
-    });
-  });
-
-  // TODO Update strategy for relayConnections
-  xdescribe('mockRelayConnection', () => {
-    const schemaDefinition = `
-      schema {
-        query: Query
-      }
-      
-      type Query {
-        objectConnection(argument: String, before: String, after: String, first: Int, last: Int): ObjectConnection
-      }
-
-      type ObjectConnection {
-        pageInfo: PageInfo!
-        edges: [ObjectEdge]
-      }
-
-      type ObjectEdge {
-        node: Object
-        cursor: String!
-      }
-
-      type Object implements Node {
-        property: String
-        id: ID!
-      }
-
-      interface Node {
-        id: ID!
-      }
-
-      type PageInfo {
-        hasNextPage: Boolean!
-        hasPreviousPage: Boolean!
-        startCursor: String
-        endCursor: String
-      }
-    `;
-
-    it('Returns an obvious error when both first and last are set', () => {
-      const mocks = {
-        Query: {
-          objectConnection: mockRelayConnection()
-        },
-        Object: {
-          property: () => 'Object.property'
-        }
-      };
-
-      // $FlowFixMe It seems to happen because it is the first test of this `describe` block...
-      const server = mockServer(schemaDefinition, mocks);
-      const result = server(`
-        query test {
-          objectConnection(last: 1, first: 3) {
-            edges {
-              node {
-                property
-              }
-            }
-          }
-        }
-      `);
-
-      expect(result.errors && result.errors[0].message).toBe(
-        'Either first xor last should be set'
-      );
-    });
-
-    it('Is possible to override errors by specifying all queried relay fields', () => {
-      const mocks = {
-        Query: {
-          objectConnection: mockRelayConnection()
-        },
-        Object: {
-          property: () => 'Object.property'
-        },
-        PageInfo: {
-          hasNextPage: () => {},
-          hasPreviousPage: () => {}
-        },
-        ObjectEdge: {
-          cursor: () => 'ObjectEdge.cursor'
-        }
-      };
-
-      const server = mockServer(schemaDefinition, mocks);
-      const result = server(
-        `
-        query test {
-          objectConnection(last: 1, first: 3) {
-            edges {
-              node {
-                property
-              }
-              cursor
-            }
-            pageInfo {
-              hasNextPage
-              hasPreviousPage
-            }
-          }
-        }
-      `,
-        {},
-        {
-          objectConnection: {
-            edges: [
-              {
-                node: {},
-                cursor: ''
-              }
-            ],
-            pageInfo: {
-              hasNextPage: true,
-              hasPreviousPage: false
-            }
-          }
-        }
-      );
-
-      expect(result.errors).toBeUndefined();
-    });
-
-    it('Returns the right number of items when first or last are set', () => {
-      const mocks = {
-        Query: {
-          objectConnection: mockRelayConnection()
-        },
-        Object: {
-          property: () => 'Object.property'
-        },
-        PageInfo: {
-          hasNextPage: () => {},
-          hasPreviousPage: () => {}
-        }
-      };
-
-      const server = mockServer(schemaDefinition, mocks);
-      const query = `
-        query test ($first: Int, $last: Int) {
-          objectConnection(first: $first, last: $last) {
-            edges {
-              node {
-                property
-              }
-            }
-            pageInfo {
-              hasNextPage
-              hasPreviousPage
-            }
-          }
-        }
-      `;
-
-      let result = server(query, { first: 3 });
-      expect(_.at(result, 'data.objectConnection.edges')[0]).toHaveLength(3);
-      expect(_.at(result, 'data.objectConnection.pageInfo')[0]).toEqual({
-        hasNextPage: true,
-        hasPreviousPage: false
-      });
-
-      result = server(query, { last: 1 });
-      expect(_.at(result, 'data.objectConnection.edges')[0]).toHaveLength(1);
-      expect(_.at(result, 'data.objectConnection.pageInfo')[0]).toEqual({
-        hasNextPage: false,
-        hasPreviousPage: true
-      });
-    });
-
-    it('Returns no more than the totalSize of items', () => {
-      const mocks = {
-        Query: {
-          objectConnection: mockRelayConnection({ maxSize: 2 })
-        },
-        Object: {
-          property: () => 'Object.property'
-        },
-        PageInfo: {
-          hasNextPage: () => {},
-          hasPreviousPage: () => {}
-        }
-      };
-
-      const server = mockServer(schemaDefinition, mocks);
-      const query = `
-        query test ($first: Int, $last: Int) {
-          objectConnection(first: $first, last: $last) {
-            edges {
-              node {
-                property
-              }
-            }
-            pageInfo {
-              hasNextPage
-              hasPreviousPage
-            }
-          }
-        }
-      `;
-
-      let result = server(query, { first: 3 });
-      expect(result.errors).toBeUndefined();
-      expect(_.at(result, 'data.objectConnection.edges')[0]).toHaveLength(2);
-      expect(_.at(result, 'data.objectConnection.pageInfo')[0]).toEqual({
-        hasNextPage: false,
-        hasPreviousPage: false
-      });
-
-      result = server(query, { last: 3 });
-      expect(result.errors).toBeUndefined();
-      expect(_.at(result, 'data.objectConnection.edges')[0]).toHaveLength(2);
-      expect(_.at(result, 'data.objectConnection.pageInfo')[0]).toEqual({
-        hasNextPage: false,
-        hasPreviousPage: false
-      });
-    });
-
-    it('Allows to specify mocks for the nodes', () => {
-      const mocks = {
-        Query: {
-          objectConnection: mockRelayConnection({
-            nodeMock: ({ argument }, index) => ({
-              property: `Query.objectConnection.nodeMock.${index}:${argument}`
-            })
-          })
-        },
-        Object: {
-          property: () => 'Object.property'
-        }
-      };
-
-      const server = mockServer(schemaDefinition, mocks);
-
-      const result = server(`
-        query test {
-          objectConnection(first: 2, argument: "ARGUMENT") {
-            edges {
-              node {
-                property
-              }
-            }
-          }
-        }
-      `);
-
-      expect(result).toEqual({
-        data: {
-          objectConnection: {
-            edges: [
-              {
-                node: { property: 'Query.objectConnection.nodeMock.0:ARGUMENT' }
-              },
-              {
-                node: { property: 'Query.objectConnection.nodeMock.1:ARGUMENT' }
-              }
-            ]
-          }
-        }
-      });
     });
   });
 });

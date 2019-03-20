@@ -54,10 +54,19 @@ export type QueryMockPrimitive =
 
 export type QueryMock = QueryMockPrimitive | MockFunction<QueryMockPrimitive>;
 
-export function mockServer(schemaDefinition: string, baseMocks: MockMap) {
+export function mockServer(
+  schemaDefinition: string,
+  baseMocks: MockMap,
+  getBaseMockForField
+) {
   const schema: GraphQLSchema = buildSchemaFromTypeDefinitions(
     schemaDefinition
   );
+
+  if (getBaseMockForField) {
+    addBaseMocks(schema, baseMocks, getBaseMockForField);
+  }
+
   validateBaseMocks(baseMocks, schema);
 
   forEachField(schema, (type, field) => {
@@ -75,6 +84,20 @@ export function mockServer(schemaDefinition: string, baseMocks: MockMap) {
     throwUnexpectedErrors(result);
     return result;
   };
+}
+
+function addBaseMocks(schema, baseMocks, getBaseMockForField) {
+  forEachField(schema, (parentType, field) => {
+    if (baseMocks[parentType.name] && baseMocks[parentType.name][field.name]) {
+      return;
+    }
+
+    const baseMock = getBaseMockForField(parentType, field);
+    if (baseMock) {
+      baseMocks[parentType.name] = baseMocks[parentType.name] || {};
+      baseMocks[parentType.name][field.name] = baseMock;
+    }
+  });
 }
 
 type Root = {|
@@ -145,6 +168,10 @@ function mergeMockValues(baseMockValue, queryMockValue, field) {
     return null;
   }
 
+  if (queryMockValue === undefined && baseMockValue instanceof Error) {
+    return baseMockValue;
+  }
+
   if (isLeafType(getNamedType(field.type))) {
     if (queryMockValue === undefined) {
       return baseMockValue;
@@ -177,8 +204,12 @@ function mergeBaseMocks(
   baseMockInfo: BaseMockInfo
 ) {
   return function(...args: Array<mixed>) {
-    let baseMockValue = getMockValue(baseMock, ...args);
-    throwIfInvalidBaseMockValue(baseMockValue, graphQLType, baseMockInfo);
+    let baseMockValue = getBaseMockValue(
+      graphQLType,
+      baseMockInfo,
+      baseMock,
+      ...args
+    );
 
     let overrideMockValue = getMockValue(overrideMock, ...args);
     const nullableType = getNullableType(graphQLType);
@@ -192,6 +223,10 @@ function mergeBaseMocks(
     }
 
     if (overrideMockValue === undefined && isLeafType(nullableType)) {
+      return baseMockValue;
+    }
+
+    if (overrideMockValue === undefined && baseMockValue instanceof Error) {
       return baseMockValue;
     }
 
@@ -240,7 +275,7 @@ function mergeBaseMocks(
     const baseMockValueCopy = baseMockValue;
 
     mergedObjectObjectKeys.forEach(nestedFieldName => {
-      const nestedField = graphQLType.getFields()[nestedFieldName];
+      const nestedField = nullableType.getFields()[nestedFieldName];
 
       mergedMockObject[nestedFieldName] = (...mergedMockArgs) => {
         return mergeBaseMocks(
@@ -262,26 +297,50 @@ function mergeBaseMocks(
   };
 }
 
-function throwIfInvalidBaseMockValue(
-  baseMockValue,
+function getBaseMockValue(
   graphQLType,
-  baseMockInfo: BaseMockInfo
+  baseMockInfo: BaseMockInfo,
+  baseMock,
+  ...baseMockArgs
 ) {
   const nullableType = getNullableType(graphQLType);
+  const path = baseMockInfo.path;
+
+  let baseMockValue;
+  try {
+    baseMockValue = getMockValue(baseMock, ...baseMockArgs);
+  } catch (err) {
+    throw Error(
+      `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
+        `threw an error for path '${getFullPath(path)}'.\n` +
+        `Base mocks are not allowed to throw errors. ` +
+        `In the rare case you actually want a base mock to return a GraphQL error, ` +
+        `have the base mock return an Error() instead of throwing one.`
+    );
+  }
 
   if (
     baseMockValue === undefined &&
     nullableType instanceof GraphQLObjectType
   ) {
-    return;
+    return baseMockValue;
+  }
+
+  if (baseMockValue instanceof Error) {
+    return baseMockValue;
+  }
+
+  if (baseMockValue instanceof Promise) {
+    throw Error(
+      `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
+        `returned a promise for path '${getFullPath(path)}'.\n` +
+        `Mock functions must be synchronous.`
+    );
   }
 
   if (baseMockValue === undefined && !baseMockInfo.path) {
-    const fullPath = getFullPath(baseMockInfo.path);
     throw Error(
-      `Base mock for \'${baseMockInfo.parentType.name}.${
-        baseMockInfo.field.name
-      }\' ` +
+      `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
         `returned 'undefined'.\n` +
         `Base mocks are not allowed to return 'undefined'. ` +
         `Return a value compatible with type '${nullableType.name}'.`
@@ -289,26 +348,11 @@ function throwIfInvalidBaseMockValue(
   }
 
   if (baseMockValue === null) {
-    const fullPath = getFullPath(baseMockInfo.path);
     throw Error(
-      `Base mock for \'${baseMockInfo.parentType.name}.${
-        baseMockInfo.field.name
-      }\' ` +
-        `returned 'null' for path '${fullPath}'.\n` +
+      `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
+        `returned 'null' for path '${getFullPath(path)}'.\n` +
         `Base mocks are not allowed to return 'null'. ` +
         `Use 'queryMock' to specify 'null' values instead.`
-    );
-  }
-
-  if (baseMockValue instanceof Error) {
-    const fullPath = getFullPath(baseMockInfo.path);
-    throw Error(
-      `Base mock for \'${baseMockInfo.parentType.name}.${
-        baseMockInfo.field.name
-      }\' ` +
-        `returned an error for path '${fullPath}'.\n` +
-        `Base mocks are not allowed to return 'Error' values. ` +
-        `Use 'queryMock' to specify 'Error' values instead.`
     );
   }
 
@@ -316,12 +360,9 @@ function throwIfInvalidBaseMockValue(
     try {
       nullableType.serialize(baseMockValue);
     } catch (err) {
-      const fullPath = getFullPath(baseMockInfo.path);
       throw Error(
-        `Base mock for \'${baseMockInfo.parentType.name}.${
-          baseMockInfo.field.name
-        }\' ` +
-          `returned an invalid value for path '${fullPath}'.\n` +
+        `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
+          `returned an invalid value for path '${getFullPath(path)}'.\n` +
           `Value '${baseMockValue}' is incompatible with type '${
             nullableType.name
           }'.`
@@ -331,12 +372,9 @@ function throwIfInvalidBaseMockValue(
 
   if (nullableType instanceof GraphQLObjectType) {
     if (typeof baseMockValue !== 'object') {
-      const fullPath = getFullPath(baseMockInfo.path);
       throw Error(
-        `Base mock for \'${baseMockInfo.parentType.name}.${
-          baseMockInfo.field.name
-        }\' ` +
-          `did not return an object for path '${fullPath}'.\n` +
+        `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
+          `did not return an object for path '${getFullPath(path)}'.\n` +
           `Value '${baseMockValue}' is incompatible with type '${
             nullableType.name
           }'.`
@@ -348,9 +386,7 @@ function throwIfInvalidBaseMockValue(
       if (!fieldNames[key]) {
         const nestedFullPath = getFullPath({ key, prev: baseMockInfo.path });
         throw Error(
-          `Base mock for \'${baseMockInfo.parentType.name}.${
-            baseMockInfo.field.name
-          }\' ` +
+          `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
             `returns a value for field path \'${nestedFullPath}\' that does not exist. ` +
             'Base mocks should return values only for valid fields.'
         );
@@ -360,17 +396,17 @@ function throwIfInvalidBaseMockValue(
 
   if (
     nullableType instanceof GraphQLList &&
-    !(baseMockValue instanceof MockList)
+    !(baseMockValue instanceof MockList) &&
+    !baseMockInfo.path
   ) {
-    const fullPath = getFullPath(baseMockInfo.path);
     throw Error(
-      `Base mock for \'${baseMockInfo.parentType.name}.${
-        baseMockInfo.field.name
-      }\' ` +
-        `did not return a MockList for path '${fullPath}'.\n` +
+      `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
+        `did not return a MockList for path '${getFullPath(path)}'.\n` +
         `Use 'mockList' function to mock lists in base mocks.`
     );
   }
+
+  return baseMockValue;
 }
 
 function getFullPath(fieldPath: FieldPath) {
@@ -384,6 +420,10 @@ function getFullPath(fieldPath: FieldPath) {
 
   allPaths.reverse();
   return allPaths.join('.');
+}
+
+function getFieldName(baseMockInfo) {
+  return `${baseMockInfo.parentType.name}.${baseMockInfo.field.name}`;
 }
 
 function getMockValue(mock, ...args) {
@@ -443,7 +483,7 @@ function getFieldMock(
 
 type MockListFunction<T> = ({ [string]: any }, number) => T;
 
-class MockList<T: BaseMockPrimitive | QueryMockPrimitive> {
+export class MockList<T: BaseMockPrimitive | QueryMockPrimitive> {
   length: number;
   mockFunction: MockListFunction<T>;
 
@@ -499,10 +539,12 @@ function validateBaseMocks(baseMocks: MockMap, schema: GraphQLSchema) {
       }
 
       if (typeof baseMocks[typeName][fieldName] !== 'function') {
+        // TODO Add better validation message
         throw Error('baseMocks should be an object of object of functions.');
       }
 
       if (isInterface && !isLeafType(getNullableType(fields[fieldName].type))) {
+        // TODO Add better validation message
         throw Error(
           'It is not allowed to define mocks for non-leaf fields on interfaces.'
         );
@@ -520,14 +562,11 @@ function markUnexpectedErrors(
     try {
       return fieldResolver(...args);
     } catch (error) {
-      // throw error;
-      // console.log(error.stack);
-      throw new MockError(error);
+      error.throwError = true;
+      throw error;
     }
   };
 }
-
-class MockError extends Error {}
 
 function throwUnexpectedErrors(result) {
   if (!result.errors) {
@@ -535,85 +574,10 @@ function throwUnexpectedErrors(result) {
   }
 
   result.errors.forEach(error => {
-    if (error.originalError instanceof MockError) {
+    if (error.originalError && error.originalError.throwError) {
       throw error.originalError;
     }
   });
-}
-
-// Relay Utils
-
-type RelayConnactionParams = {
-  before: ?string,
-  after: ?string,
-  first: ?number,
-  last: ?number
-};
-
-type RelayConnectionMockParams = {
-  maxSize?: number,
-  nodeMock?: (FieldArgs, number) => {}
-};
-
-// TODO Add better types
-// https://stackoverflow.com/questions/54873504/how-to-type-a-generic-function-that-returns-subtypes
-export function mockRelayConnection(
-  params: ?RelayConnectionMockParams
-): RelayConnactionParams => mixed {
-  return (relayConnectionArgs: RelayConnactionParams) => {
-    const { before, after, first, last } = relayConnectionArgs;
-    const maxSize = params && params.maxSize;
-    const nodeMockFunction = params && params.nodeMock;
-
-    if (!isEmptyString(before) && !isEmptyString(after)) {
-      return getRelayConnectionError('Before and after cannot be both set');
-    }
-
-    if ((first != null && last != null) || (first == null && last == null)) {
-      return getRelayConnectionError('Either first xor last should be set');
-    }
-
-    if ((first != null && first < 0) || (last != null && last < 0)) {
-      return getRelayConnectionError('First and last cannot be negative');
-    }
-
-    const isForwardPagination = first != null;
-    // $FlowFixMe
-    const requestedPageSize: number = first != null ? first : last;
-
-    const pageSize =
-      maxSize && requestedPageSize > maxSize ? maxSize : requestedPageSize;
-
-    const hasMorePages = maxSize != null ? pageSize < maxSize : true;
-
-    return {
-      edges: new MockList(pageSize, ({}, index) => ({
-        node: nodeMockFunction
-          ? nodeMockFunction(relayConnectionArgs, index)
-          : undefined,
-        cursor: `cursor_${index}`
-      })),
-      pageInfo: {
-        hasNextPage: isForwardPagination ? hasMorePages : false,
-        hasPreviousPage: isForwardPagination ? false : hasMorePages
-      }
-    };
-  };
-}
-
-const getRelayConnectionError = (errorMessage: string): BaseMockPrimitive => ({
-  edges: new MockList(1, () => ({
-    node: Error(errorMessage),
-    cursor: Error(errorMessage)
-  })),
-  pageInfo: {
-    hasNextPage: Error(errorMessage),
-    hasPreviousPage: Error(errorMessage)
-  }
-});
-
-function isEmptyString(string: ?string) {
-  return !string || string.length === 0;
 }
 
 // Schema utils
