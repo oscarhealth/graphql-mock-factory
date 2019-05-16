@@ -1,6 +1,6 @@
 // @flow
 import _ from 'lodash';
-import { mockServer, mockList } from '../mockServer';
+import { mockServer, mockList } from '../index';
 
 describe('mockServer', () => {
   describe('Mock precedence rules', () => {

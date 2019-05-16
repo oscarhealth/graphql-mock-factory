@@ -1,5 +1,9 @@
-import { getBaseMockForRelayField, mockRelayConnection } from '../mockRelay';
-import { mockServer, mockList } from '../mockServer';
+import {
+  getBaseMockForRelayField,
+  mockList,
+  mockRelayConnection,
+  mockServer
+} from '../index';
 import _ from 'lodash';
 
 describe('mockRelayConnection', () => {

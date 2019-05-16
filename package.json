@@ -6,11 +6,11 @@
   "scripts": {
     "test": "jest",
     "test:watch": "yarn test --watch",
-    "prepublish": "yarn build && yarn flow && yarn test",
     "flow": "flow check",
     "prettier": "prettier \"src/**/*\" --write",
-    "build": "npm run build-dist && del dist/**/__tests__",
-    "build-dist": "rm -rf dist && babel src -d dist --source-maps && flow-copy-source src dist"
+    "build": "yarn build-dist && yarn test dist && yarn clean-dist",
+    "build-dist": "rm -rf dist && babel src -d dist --source-maps && flow-copy-source src dist",
+    "clean-dist": "del dist/**/__tests__"
   },
   "keywords": [
     "graphql",
