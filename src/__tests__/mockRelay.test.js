@@ -1,12 +1,12 @@
 import {
   getBaseMockForRelayField,
   mockList,
-  mockRelayConnection,
+  mockConnection,
   mockServer
 } from '../index';
 import _ from 'lodash';
 
-describe('mockRelayConnection', () => {
+describe('mockConnection', () => {
   const schemaDefinition = `
     schema {
       query: Query
@@ -46,7 +46,7 @@ describe('mockRelayConnection', () => {
   it('Returns an error when both first and last are set', () => {
     const mocks = {
       Query: {
-        objectConnection: mockRelayConnection()
+        objectConnection: mockConnection()
       },
       Object: {
         property: () => 'Object.property'
@@ -83,7 +83,7 @@ describe('mockRelayConnection', () => {
   it('Returns an error if first or last are negative', () => {
     const mocks = {
       Query: {
-        objectConnection: mockRelayConnection()
+        objectConnection: mockConnection()
       },
       Object: {
         property: () => 'Object.property'
@@ -120,7 +120,7 @@ describe('mockRelayConnection', () => {
   it('Returns an error when both before and after are set', () => {
     const mocks = {
       Query: {
-        objectConnection: mockRelayConnection()
+        objectConnection: mockConnection()
       },
       Object: {
         property: () => 'Object.property'
@@ -157,7 +157,7 @@ describe('mockRelayConnection', () => {
   it('Returns the right number of items when first or last are set', () => {
     const mocks = {
       Query: {
-        objectConnection: mockRelayConnection()
+        objectConnection: mockConnection()
       },
       Object: {
         property: () => 'Object.property'
@@ -204,7 +204,7 @@ describe('mockRelayConnection', () => {
   it('Returns no more than the maxSize of items', () => {
     const mocks = {
       Query: {
-        objectConnection: mockRelayConnection({ maxSize: 2 })
+        objectConnection: mockConnection({ maxSize: 2 })
       },
       Object: {
         property: () => 'Object.property'
@@ -249,10 +249,10 @@ describe('mockRelayConnection', () => {
     });
   });
 
-  it('Allows to specify mocks for the nodes', () => {
+  fit('Allows to specify mocks for the nodes', () => {
     const mocks = {
       Query: {
-        objectConnection: mockRelayConnection({
+        objectConnection: mockConnection({
           nodeMock: ({ argument }, index) => ({
             property: `Query.objectConnection.nodeMock.${index}:${argument}`
           })
@@ -300,7 +300,7 @@ describe('mockRelayConnection', () => {
   it('Is not required to use getBaseMockForRelayField', () => {
     const mocks = {
       Query: {
-        objectConnection: mockRelayConnection()
+        objectConnection: mockConnection()
       },
       Object: {
         property: () => 'Object.property'

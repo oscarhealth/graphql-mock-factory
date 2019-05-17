@@ -16,7 +16,8 @@ type RelayConnectionMockParams = {
 };
 
 // TODO Add better types
-export function mockRelayConnection(
+// TODO Support startCursor and endCursor
+export function mockConnection(
   params: ?RelayConnectionMockParams
 ): RelayConnactionParams => mixed {
   return (relayConnectionArgs: RelayConnactionParams) => {
@@ -64,6 +65,8 @@ function isEmptyString(string: ?string) {
   return !string || string.length === 0;
 }
 
+// TODO
+// - Add base mock for Node.id
 export function getBaseMockForRelayField(parentType, field) {
   if (isRelayConnectionType(parentType)) {
     if (field.name === 'edges') {
