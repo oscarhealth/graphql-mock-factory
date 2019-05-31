@@ -1067,7 +1067,17 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
 
 ## FAQ
 
-TODO
+## TODO
+
+- [x] Add extensive tests
+- [x] Add helpful validation errors
+- [x] Add helpers for Relay-compliant schemas
+- [x] Add documentation
+- [ ] Add default mocks for standard scalar fields
+- [ ] Add support for Enum
+- [ ] Add support for custom scalar fields
+- [ ] `getConnection`: `maxSize` should work across pages
+- [ ] Fix Flow types 
 
 ## License
 
