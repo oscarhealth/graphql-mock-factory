@@ -1065,8 +1065,6 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
   </p>
 </details>
 
-## FAQ
-
 ## TODO
 
 - [x] Add extensive tests
@@ -1076,8 +1074,11 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
 - [ ] Add default mocks for standard scalar fields
 - [ ] Add support for Enum
 - [ ] Add support for custom scalar fields
+- [ ] Add FAQ: comparison with `graphql-tools`, etc
+- [ ] Add recipes with common testing patterns
 - [ ] `getConnection`: `maxSize` should work across pages
 - [ ] Fix Flow types 
+- [ ] Add credits
 
 ## License
 

@@ -56,30 +56,31 @@ export type QueryMock = QueryMockPrimitive | MockFunction<QueryMockPrimitive>;
 
 export function mockServer(
   schemaDefinition: string,
-  baseMocks: MockMap,
-  getBaseMockForField
+  mocks: MockMap,
+  getMockForField
 ) {
   const schema: GraphQLSchema = buildSchemaFromTypeDefinitions(
     schemaDefinition
   );
 
-  if (getBaseMockForField) {
-    addBaseMocks(schema, baseMocks, getBaseMockForField);
+  if (getMockForField) {
+    addBaseMocks(schema, mocks, getMockForField);
   }
 
-  validateBaseMocks(baseMocks, schema);
+  validateBaseMocks(mocks, schema);
 
   forEachField(schema, (type, field) => {
-    field.resolve = getFieldResolver(type, field, baseMocks);
+    field.resolve = getFieldResolver(type, field, mocks);
   });
 
-  return (query: string, vars: Object = {}, queryMock: Object = {}) => {
+  return (query: string, variables: Object = {}, mockOverride: Object = {}) => {
     const result = graphqlSync(
       schema,
       query,
-      { queryMock: queryMock },
+      // TODO Rename to mockOverride
+      { queryMock: mockOverride },
       {},
-      vars
+      variables
     );
     throwUnexpectedErrors(result);
     return result;
