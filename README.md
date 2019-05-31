@@ -629,7 +629,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
   // By default, `mockConnection` returns the number of requested nodes.
   // Note that `hasNextPage` and `hasPreviousPage` behave as expected.
 
-  import { mockServer, mockConnection, getBaseMockForRelayField } from 'graphql-mock-factory';
+  import { mockServer, mockConnection, getRelayMock } from 'graphql-mock-factory';
 
   ...
 
@@ -654,7 +654,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
     schemaString,
     mocks,
     // Adds mock functions for un-essential Relay fields
-    getBaseMockForRelayField
+    getRelayMock
   );
 
   mockedServer(`
@@ -889,7 +889,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
 
 ## API Reference
 
-**`mockServer(schemaDefinition, baseMocks, [getBaseMockForField])`**  
+**`mockServer(schemaDefinition, mocks, [getMock])`**  
 <details>
   <summary>Return a mocked server. This is the entry point of this lib.</summary>
   <p>
@@ -905,27 +905,27 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
 
     /**
      * An object mapping to all the mock functions of each field.
-     * baseMocks[objectTypeName][fieldName] = mockFunction
+     * mocks[objectTypeName][fieldName] = mockFunction
      * 
      * All queried fields are currently required to have a base mock function defined.
      * This will be probably relaxed in the future.
      *
      * TODO Document interface
      */
-    baseMocks: {[string]: {[string]: MockFunction}}, 
+    mocks: {[string]: {[string]: MockFunction}}, 
 
     /**
      * Optional: A function that returns a mock function for a field.
      *
+     * This is a hook to define to define mock functions in a programmatic way.
      * It will be called for each field that has not been associated to a mock 
-     * function in `baseMocks`. If the function does not return anything for 
+     * function in `mocks`. If the function does not return anything for 
      * a field, then no mock function is attached to the field.
      * 
-     * This allows to define mock functions in an automated manner. 
-     * For example, `getBaseMockForRelayField` can be passed in to 
+     * For example, `getRelayMock` can be passed in to 
      * automatically define all the Relay fields.
      */
-    getBaseMockForField? : (
+    getMock? : (
       /**
        * The GraphQL type of the parent ObjectType containing the field.
        * @example: `User` from `User.name`
@@ -1045,7 +1045,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
   </p>
 </details>
 
-**`getBaseMockForRelayField()`**  
+**`getRelayMock()`**  
 <details>
   <summary>Automatically mock all Relay fields.</summary>
   <p>
@@ -1060,7 +1060,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
    * This will skip fields that have been mocked via the `mocks` 
    * parameter of `mockServer`. See "API Reference" > "mockServer".
    */
-  getBaseMockForRelayField()
+  getRelayMock()
   ```
   </p>
 </details>

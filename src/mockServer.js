@@ -54,20 +54,16 @@ export type QueryMockPrimitive =
 
 export type QueryMock = QueryMockPrimitive | MockFunction<QueryMockPrimitive>;
 
-export function mockServer(
-  schemaDefinition: string,
-  mocks: MockMap,
-  getMockForField
-) {
+export function mockServer(schemaDefinition: string, mocks: MockMap, getMock) {
   const schema: GraphQLSchema = buildSchemaFromTypeDefinitions(
     schemaDefinition
   );
 
-  if (getMockForField) {
-    addBaseMocks(schema, mocks, getMockForField);
+  if (getMock) {
+    addBaseMocks(schema, mocks, getMock);
   }
 
-  validateBaseMocks(mocks, schema);
+  validateMocks(mocks, schema);
 
   forEachField(schema, (type, field) => {
     field.resolve = getFieldResolver(type, field, mocks);
@@ -507,7 +503,7 @@ export function mockList<T: BaseMockPrimitive | QueryMockPrimitive>(
 
 // Input Validation
 
-function validateBaseMocks(baseMocks: MockMap, schema: GraphQLSchema) {
+function validateMocks(baseMocks: MockMap, schema: GraphQLSchema) {
   const typeMap = schema.getTypeMap();
 
   Object.keys(baseMocks).forEach(typeName => {
