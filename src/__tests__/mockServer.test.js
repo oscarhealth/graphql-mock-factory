@@ -32,7 +32,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -63,7 +63,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -92,7 +92,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -120,7 +120,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -163,7 +163,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -212,7 +212,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -238,7 +238,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -275,7 +275,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -306,7 +306,7 @@ describe('mockServer', () => {
       });
     });
 
-    describe('queryMock parameter', () => {
+    describe('mockOverride parameter', () => {
       it('Returns null when a value is set to null', () => {
         const mocks = {
           Object: {
@@ -315,7 +315,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -351,7 +351,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -393,7 +393,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -411,9 +411,9 @@ describe('mockServer', () => {
           {},
           {
             object: {
-              property: 'queryMock.object.property',
+              property: 'mockOverride.object.property',
               object: ({ argument }) => ({
-                property: `queryMock.object.object.property:${argument}`
+                property: `mockOverride.object.object.property:${argument}`
               })
             }
           }
@@ -423,10 +423,10 @@ describe('mockServer', () => {
           data: {
             object: {
               object: {
-                property: 'queryMock.object.object.property:ARGUMENT',
+                property: 'mockOverride.object.object.property:ARGUMENT',
                 property2: 'Object.property2'
               },
-              property: 'queryMock.object.property',
+              property: 'mockOverride.object.property',
               property2: 'Query.object.property2'
             }
           }
@@ -443,7 +443,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -456,7 +456,7 @@ describe('mockServer', () => {
           {},
           {
             listOfObjects: [
-              { property: 'queryMock.listOfObject.0.property' },
+              { property: 'mockOverride.listOfObject.0.property' },
               {},
               null,
               undefined
@@ -467,7 +467,7 @@ describe('mockServer', () => {
         expect(result).toEqual({
           data: {
             listOfObjects: [
-              { property: 'queryMock.listOfObject.0.property' },
+              { property: 'mockOverride.listOfObject.0.property' },
               { property: 'Object.property' },
               null,
               { property: 'Object.property' }
@@ -489,7 +489,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -504,10 +504,10 @@ describe('mockServer', () => {
           {
             listOfObjects: ({ argument }) => [
               {
-                property: `queryMock.listOfObjects.0.property:${argument}`
+                property: `mockOverride.listOfObjects.0.property:${argument}`
               },
               {
-                property2: `queryMock.listOfObjects.0.property2`
+                property2: `mockOverride.listOfObjects.0.property2`
               },
               {}
             ]
@@ -518,12 +518,12 @@ describe('mockServer', () => {
           data: {
             listOfObjects: [
               {
-                property: 'queryMock.listOfObjects.0.property:ARGUMENT',
+                property: 'mockOverride.listOfObjects.0.property:ARGUMENT',
                 property2: 'Object.property2'
               },
               {
                 property: 'Query.listOfObjects.1:ARGUMENT',
-                property2: 'queryMock.listOfObjects.0.property2'
+                property2: 'mockOverride.listOfObjects.0.property2'
               },
               {
                 property: 'Query.listOfObjects.2:ARGUMENT',
@@ -541,7 +541,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -555,7 +555,7 @@ describe('mockServer', () => {
           {},
           {
             object: {
-              aliasedPropety: 'queryMock.object.property'
+              aliasedPropety: 'mockOverride.object.property'
             }
           }
         );
@@ -563,7 +563,7 @@ describe('mockServer', () => {
         expect(result).toEqual({
           data: {
             object: {
-              aliasedPropety: 'queryMock.object.property',
+              aliasedPropety: 'mockOverride.object.property',
               property: 'Object.property'
             }
           }
@@ -577,7 +577,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -595,10 +595,10 @@ describe('mockServer', () => {
           {},
           {
             aliasedObject: {
-              aliasedProperty: 'queryMock.aliasedObject.aliasedProperty',
+              aliasedProperty: 'mockOverride.aliasedObject.aliasedProperty',
               aliasedObject: {
                 aliasedProperty:
-                  'queryMock.aliasedObject.aliasedProperty.aliasedProperty'
+                  'mockOverride.aliasedObject.aliasedProperty.aliasedProperty'
               }
             }
           }
@@ -608,11 +608,11 @@ describe('mockServer', () => {
           data: {
             aliasedObject: {
               property: 'Object.property',
-              aliasedProperty: 'queryMock.aliasedObject.aliasedProperty',
+              aliasedProperty: 'mockOverride.aliasedObject.aliasedProperty',
               aliasedObject: {
                 property: 'Object.property',
                 aliasedProperty:
-                  'queryMock.aliasedObject.aliasedProperty.aliasedProperty'
+                  'mockOverride.aliasedObject.aliasedProperty.aliasedProperty'
               }
             }
           }
@@ -626,7 +626,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -644,10 +644,10 @@ describe('mockServer', () => {
           {},
           {
             aliasedObject: {
-              aliasedProperty: 'queryMock.aliasedObject.aliasedProperty',
+              aliasedProperty: 'mockOverride.aliasedObject.aliasedProperty',
               aliasedObject: {
                 aliasedProperty:
-                  'queryMock.aliasedObject.aliasedProperty.aliasedProperty'
+                  'mockOverride.aliasedObject.aliasedProperty.aliasedProperty'
               }
             }
           }
@@ -657,11 +657,11 @@ describe('mockServer', () => {
           data: {
             aliasedObject: {
               property: 'Object.property',
-              aliasedProperty: 'queryMock.aliasedObject.aliasedProperty',
+              aliasedProperty: 'mockOverride.aliasedObject.aliasedProperty',
               aliasedObject: {
                 property: 'Object.property',
                 aliasedProperty:
-                  'queryMock.aliasedObject.aliasedProperty.aliasedProperty'
+                  'mockOverride.aliasedObject.aliasedProperty.aliasedProperty'
               }
             }
           }
@@ -694,7 +694,7 @@ describe('mockServer', () => {
       }
     `;
 
-    describe('baseMocks object', () => {
+    describe('mocks object', () => {
       it('Throws an error when there is mock for a type that does not exist', () => {
         expect.assertions(1);
         try {
@@ -703,7 +703,7 @@ describe('mockServer', () => {
           });
         } catch (error) {
           expect(error.message).toBe(
-            "baseMocks['DoesNotExist'] is not defined in schema."
+            "mocks['DoesNotExist'] is not defined in schema."
           );
         }
       });
@@ -716,7 +716,7 @@ describe('mockServer', () => {
           });
         } catch (error) {
           expect(error.message).toBe(
-            'baseMocks should be an object of object of functions.'
+            'mocks should be an object of object of functions.'
           );
         }
       });
@@ -731,7 +731,7 @@ describe('mockServer', () => {
           });
         } catch (error) {
           expect(error.message).toBe(
-            "baseMocks['Object']['doesNotExist'] is not defined in schema."
+            "mocks['Object']['doesNotExist'] is not defined in schema."
           );
         }
       });
@@ -762,7 +762,7 @@ describe('mockServer', () => {
           });
         } catch (error) {
           expect(error.message).toBe(
-            'baseMocks should be an object of object of functions.'
+            'mocks should be an object of object of functions.'
           );
         }
       });
@@ -777,7 +777,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(`
           query test {
@@ -798,7 +798,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(`
           query test {
@@ -819,7 +819,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -839,7 +839,7 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when there is no base mock for a field that is a scalar', () => {
-        const server = mockServer(schemaDefinition, {});
+        const server = mockServer(schemaDefinition, {}, null);
 
         expect.assertions(1);
         try {
@@ -857,7 +857,7 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when there is no base mock for a field that is a non-null scalar', () => {
-        const server = mockServer(schemaDefinition, {});
+        const server = mockServer(schemaDefinition, {}, null);
 
         expect.assertions(1);
         try {
@@ -875,15 +875,15 @@ describe('mockServer', () => {
       });
     });
 
-    describe('baseMocks functions', () => {
+    describe('mocks functions', () => {
       it('Throws an error when a base mock returns null', () => {
-        const baseMocks = {
+        const mocks = {
           Object: {
             property: () => null
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -897,13 +897,13 @@ describe('mockServer', () => {
         } catch (error) {
           expect(error.message).toBe(
             "Base mock for 'Object.property' returned 'null' for path ''.\n" +
-              "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+              "Base mocks are not allowed to return 'null'. Use 'mockOverride' to specify 'null' values instead."
           );
         }
       });
 
       it('Throws a validation error when a base mock throws an error', () => {
-        const baseMocks = {
+        const mocks = {
           Object: {
             property: () => {
               throw Error('Object.property.throw');
@@ -911,7 +911,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -924,23 +924,25 @@ describe('mockServer', () => {
           `);
           console.error(data);
         } catch (error) {
-          expect(error.message).toBe(
-            "Base mock for 'Object.property' threw an error for path ''.\n" +
-              'Base mocks are not allowed to throw errors. ' +
-              'In the rare case you actually want a base mock to return a GraphQL error, ' +
-              'have the base mock return an Error() instead of throwing one.'
+          expect(error.message).toEqual(
+            expect.stringContaining(
+              "Base mock for 'Object.property' threw an error for path ''.\n" +
+                'Base mocks are not allowed to throw errors. ' +
+                'In the rare case you actually want a base mock to return a GraphQL error, ' +
+                'have the base mock return an Error() instead of throwing one.'
+            )
           );
         }
       });
 
       it('Throws an error when a base mock returns a promise', () => {
-        const baseMocks = {
+        const mocks = {
           Object: {
             property: () => new Promise(() => 'Object.property.Promise')
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -961,13 +963,13 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock returns a non-nested undefined', () => {
-        const baseMocks = {
+        const mocks = {
           Object: {
             property: () => {}
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -987,13 +989,13 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock for a leaf field returns an invalid value.', () => {
-        const baseMocks = {
+        const mocks = {
           Query: {
             scalar: () => ({})
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1011,13 +1013,13 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock for an object field returns an invalid value.', () => {
-        const baseMocks = {
+        const mocks = {
           Query: {
             nonNullObject: () => 0
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1037,7 +1039,7 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock for a list field returns an invalid value.', () => {
-        const baseMocks = {
+        const mocks = {
           Query: {
             listOfObjects: () => ({})
           },
@@ -1046,7 +1048,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1066,7 +1068,7 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock returns a nested field that does not exist', () => {
-        const baseMocks = {
+        const mocks = {
           Query: {
             object: () => ({
               doesNotExist: () => {}
@@ -1077,7 +1079,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1099,7 +1101,7 @@ describe('mockServer', () => {
 
       it('Validates the object nested values returned by a base mock', () => {
         // We use "Throws an error when a base mock returns null" as an example
-        const baseMocks = {
+        const mocks = {
           Query: {
             object: () => ({
               property: null
@@ -1110,7 +1112,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1124,14 +1126,14 @@ describe('mockServer', () => {
         } catch (error) {
           expect(error.message).toBe(
             "Base mock for 'Query.object' returned 'null' for path 'property'.\n" +
-              "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+              "Base mocks are not allowed to return 'null'. Use 'mockOverride' to specify 'null' values instead."
           );
         }
       });
 
       it('Validates the mock list nested values returned by a base mock', () => {
         // We use "Throws an error when a base mock returns null" as an example
-        const baseMocks = {
+        const mocks = {
           Query: {
             listOfObjects: mockList(2, () => ({
               property: null
@@ -1142,7 +1144,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1156,7 +1158,7 @@ describe('mockServer', () => {
         } catch (error) {
           expect(error.message).toBe(
             "Base mock for 'Query.listOfObjects' returned 'null' for path '0.property'.\n" +
-              "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+              "Base mocks are not allowed to return 'null'. Use 'mockOverride' to specify 'null' values instead."
           );
         }
       });
@@ -1288,7 +1290,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -1314,7 +1316,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       expect.assertions(1);
       try {
@@ -1330,6 +1332,106 @@ describe('mockServer', () => {
           'More than 1 interface for this field. Define base mock on the type.'
         );
       }
+    });
+  });
+
+  describe('getDefautMock', () => {
+    const schemaDefinition = `
+      schema {
+        query: Query
+      }
+
+      type Query {
+        boolean: Boolean
+        id: ID
+        int: Int
+        float: Float
+        string: String
+        listOfObjects: [Object]
+        listOfScalars: [String]
+      }
+
+      type Object {
+        property: String
+      }
+    `;
+
+    it('Provides default mocks for standard scalar fields and lists', () => {
+      const server = mockServer(schemaDefinition, {});
+
+      const result = server(`
+        query test {
+          boolean
+          id
+          int
+          float
+          string
+          listOfObjects {
+            property
+          }
+          listOfScalars
+        }
+      `);
+
+      if (!result.data) throw 'No data'; // Flow
+      const data = result.data;
+
+      expect(typeof data.boolean).toBe('boolean');
+      expect(typeof data.id).toBe('string');
+      expect(typeof data.float).toBe('number');
+      //$FlowFixMe
+      expect(data.float).not.toBe(Math.round(data.float));
+      expect(typeof data.int).toBe('number');
+      expect(typeof data.string).toBe('string');
+      expect(data.listOfObjects).toBeInstanceOf(Array);
+      expect(data.listOfObjects).toHaveLength(2);
+      //$FlowFixMe
+      expect(typeof data.listOfObjects[0].property).toBe('string');
+      expect(data.listOfScalars).toBeInstanceOf(Array);
+      expect(data.listOfScalars).toHaveLength(2);
+      //$FlowFixMe
+      expect(typeof data.listOfScalars[0]).toBe('string');
+    });
+
+    it('Only adds mocks if no mocks were manually defined', () => {
+      const mocks = {
+        Query: {
+          boolean: () => true,
+          id: () => 'Query.id',
+          int: () => 0,
+          float: () => 0.0,
+          string: () => 'Query.string',
+          listOfObjects: mockList(1),
+          listOfScalars: mockList(1)
+        }
+      };
+
+      const server = mockServer(schemaDefinition, mocks);
+
+      const result = server(`
+        query test {
+          boolean
+          id
+          int
+          float
+          string
+          listOfObjects {
+            property
+          }
+          listOfScalars
+        }
+      `);
+
+      if (!result.data) throw 'No data'; // Flow
+      const data = result.data;
+
+      expect(data.boolean).toBe(true);
+      expect(data.id).toBe('Query.id');
+      expect(data.int).toBe(0);
+      expect(data.float).toBe(0.0);
+      expect(data.string).toBe('Query.string');
+      expect(data.listOfObjects).toHaveLength(1);
+      expect(data.listOfScalars).toHaveLength(1);
     });
   });
 });
