@@ -1,4 +1,5 @@
 // @flow
+import faker from 'faker/locale/en';
 import { buildSchemaFromTypeDefinitions } from 'graphql-tools';
 import {
   graphqlSync,
@@ -54,7 +55,29 @@ export type QueryMockPrimitive =
 
 export type QueryMock = QueryMockPrimitive | MockFunction<QueryMockPrimitive>;
 
-export function mockServer(schemaDefinition: string, mocks: MockMap, getMock) {
+const defaultScalarMocks = {
+  Boolean: () => faker.random.boolean(),
+  ID: () => faker.random.uuid(),
+  Int: () => faker.random.number(),
+  Float: () => faker.random.float(),
+  String: () => faker.random.words()
+};
+
+function getDefaultMock(parentType, field) {
+  const nullableType = getNullableType(field.type);
+
+  if (nullableType instanceof GraphQLList) {
+    return mockList(2);
+  }
+
+  return defaultScalarMocks[nullableType.name];
+}
+
+export function mockServer(
+  schemaDefinition: string,
+  mocks: MockMap,
+  getMock = getDefaultMock
+) {
   const schema: GraphQLSchema = buildSchemaFromTypeDefinitions(
     schemaDefinition
   );
@@ -83,16 +106,16 @@ export function mockServer(schemaDefinition: string, mocks: MockMap, getMock) {
   };
 }
 
-function addBaseMocks(schema, baseMocks, getBaseMockForField) {
+function addBaseMocks(schema, mocks, getMock) {
   forEachField(schema, (parentType, field) => {
-    if (baseMocks[parentType.name] && baseMocks[parentType.name][field.name]) {
+    if (mocks[parentType.name] && mocks[parentType.name][field.name]) {
       return;
     }
 
-    const baseMock = getBaseMockForField(parentType, field);
+    const baseMock = getMock(parentType, field);
     if (baseMock) {
-      baseMocks[parentType.name] = baseMocks[parentType.name] || {};
-      baseMocks[parentType.name][field.name] = baseMock;
+      mocks[parentType.name] = mocks[parentType.name] || {};
+      mocks[parentType.name][field.name] = baseMock;
     }
   });
 }
@@ -105,10 +128,10 @@ type Root = {|
 function getFieldResolver(
   type: GraphQLObjectType,
   field: GraphQLField<mixed, mixed>,
-  baseMocks: MockMap
+  mocks: MockMap
 ): GraphQLFieldResolver<{ [string]: QueryMockPrimitive }, mixed> {
   return markUnexpectedErrors((source, args, context, info) => {
-    const baseMock = getFieldMock(type, field, baseMocks);
+    const baseMock = getFieldMock(type, field, mocks);
     const parentMock = source.parentMock && source.parentMock[field.name];
 
     const mergedBaseMocks = mergeBaseMocks(baseMock, parentMock, field.type, {
@@ -430,11 +453,11 @@ function getMockValue(mock, ...args) {
 function getFieldMock(
   type: GraphQLObjectType,
   field: GraphQLField<any, any, any>,
-  baseMocks: MockMap
+  mocks: MockMap
 ): MockFunction<BaseMockPrimitive> | void {
   let baseMock;
-  if (baseMocks[type.name]) {
-    baseMock = baseMocks[type.name][field.name];
+  if (mocks[type.name]) {
+    baseMock = mocks[type.name][field.name];
   }
 
   if (baseMock) {
@@ -455,11 +478,8 @@ function getFieldMock(
   }
 
   if (fieldInterfaces.length === 1) {
-    if (
-      baseMocks[fieldInterfaces[0]] &&
-      baseMocks[fieldInterfaces[0]][field.name]
-    ) {
-      return baseMocks[fieldInterfaces[0]][field.name];
+    if (mocks[fieldInterfaces[0]] && mocks[fieldInterfaces[0]][field.name]) {
+      return mocks[fieldInterfaces[0]][field.name];
     }
   }
 
@@ -503,12 +523,12 @@ export function mockList<T: BaseMockPrimitive | QueryMockPrimitive>(
 
 // Input Validation
 
-function validateMocks(baseMocks: MockMap, schema: GraphQLSchema) {
+function validateMocks(mocks: MockMap, schema: GraphQLSchema) {
   const typeMap = schema.getTypeMap();
 
-  Object.keys(baseMocks).forEach(typeName => {
+  Object.keys(mocks).forEach(typeName => {
     if (!typeMap[typeName]) {
-      throw Error(`baseMocks['${typeName}'] is not defined in schema.`);
+      throw Error(`mocks['${typeName}'] is not defined in schema.`);
     }
 
     if (
@@ -520,24 +540,24 @@ function validateMocks(baseMocks: MockMap, schema: GraphQLSchema) {
       throw Error('baseMock can only define field mocks on Type or Interface.');
     }
 
-    if (typeof baseMocks[typeName] !== 'object') {
-      throw Error('baseMocks should be an object of object of functions.');
+    if (typeof mocks[typeName] !== 'object') {
+      throw Error('mocks should be an object of object of functions.');
     }
 
     const isInterface = typeMap[typeName] instanceof GraphQLInterfaceType;
 
     const fields = typeMap[typeName].getFields();
 
-    Object.keys(baseMocks[typeName]).forEach(fieldName => {
+    Object.keys(mocks[typeName]).forEach(fieldName => {
       if (!fields[fieldName]) {
         throw Error(
-          `baseMocks['${typeName}']['${fieldName}'] is not defined in schema.`
+          `mocks['${typeName}']['${fieldName}'] is not defined in schema.`
         );
       }
 
-      if (typeof baseMocks[typeName][fieldName] !== 'function') {
+      if (typeof mocks[typeName][fieldName] !== 'function') {
         // TODO Add better validation message
-        throw Error('baseMocks should be an object of object of functions.');
+        throw Error('mocks should be an object of object of functions.');
       }
 
       if (isInterface && !isLeafType(getNullableType(fields[fieldName].type))) {

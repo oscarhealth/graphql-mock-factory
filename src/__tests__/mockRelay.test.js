@@ -1,3 +1,4 @@
+// TODO Re-enable flow
 import {
   getBaseMockForRelayField,
   mockList,
@@ -53,12 +54,7 @@ describe('mockConnection', () => {
       }
     };
 
-    // $FlowFixMe It seems to happen because it is the first test of this `describe` block...
-    const server = mockServer(
-      schemaDefinition,
-      mocks,
-      getBaseMockForRelayField
-    );
+    const server = mockServer(schemaDefinition, mocks, null);
     const result = server(`
       query test {
         objectConnection(last: 1, first: 3) {
@@ -90,12 +86,7 @@ describe('mockConnection', () => {
       }
     };
 
-    // $FlowFixMe It seems to happen because it is the first test of this `describe` block...
-    const server = mockServer(
-      schemaDefinition,
-      mocks,
-      getBaseMockForRelayField
-    );
+    const server = mockServer(schemaDefinition, mocks, null);
     const result = server(`
       query test {
         objectConnection(first: -2) {
@@ -127,12 +118,7 @@ describe('mockConnection', () => {
       }
     };
 
-    // $FlowFixMe It seems to happen because it is the first test of this `describe` block...
-    const server = mockServer(
-      schemaDefinition,
-      mocks,
-      getBaseMockForRelayField
-    );
+    const server = mockServer(schemaDefinition, mocks, null);
     const result = server(`
       query test {
         objectConnection(before: "before", after: "after", first: 1) {
@@ -164,11 +150,7 @@ describe('mockConnection', () => {
       }
     };
 
-    const server = mockServer(
-      schemaDefinition,
-      mocks,
-      getBaseMockForRelayField
-    );
+    const server = mockServer(schemaDefinition, mocks, null);
     const query = `
       query test ($first: Int, $last: Int) {
         objectConnection(first: $first, last: $last) {
@@ -318,8 +300,7 @@ describe('mockConnection', () => {
       }
     };
 
-    // $FlowFixMe It seems to happen because it is the first test of this `describe` block...
-    const server = mockServer(schemaDefinition, mocks);
+    const server = mockServer(schemaDefinition, mocks, null);
     const result = server(`
       query test {
         objectConnection(first: 1) {

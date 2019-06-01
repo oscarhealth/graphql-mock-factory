@@ -32,7 +32,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -63,7 +63,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -92,7 +92,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -120,7 +120,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -163,7 +163,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -212,7 +212,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -238,7 +238,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -275,7 +275,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -315,7 +315,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -351,7 +351,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -393,7 +393,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -443,7 +443,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -489,7 +489,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -541,7 +541,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -577,7 +577,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -626,7 +626,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(
           `
@@ -694,7 +694,7 @@ describe('mockServer', () => {
       }
     `;
 
-    describe('baseMocks object', () => {
+    describe('mocks object', () => {
       it('Throws an error when there is mock for a type that does not exist', () => {
         expect.assertions(1);
         try {
@@ -703,7 +703,7 @@ describe('mockServer', () => {
           });
         } catch (error) {
           expect(error.message).toBe(
-            "baseMocks['DoesNotExist'] is not defined in schema."
+            "mocks['DoesNotExist'] is not defined in schema."
           );
         }
       });
@@ -716,7 +716,7 @@ describe('mockServer', () => {
           });
         } catch (error) {
           expect(error.message).toBe(
-            'baseMocks should be an object of object of functions.'
+            'mocks should be an object of object of functions.'
           );
         }
       });
@@ -731,7 +731,7 @@ describe('mockServer', () => {
           });
         } catch (error) {
           expect(error.message).toBe(
-            "baseMocks['Object']['doesNotExist'] is not defined in schema."
+            "mocks['Object']['doesNotExist'] is not defined in schema."
           );
         }
       });
@@ -762,7 +762,7 @@ describe('mockServer', () => {
           });
         } catch (error) {
           expect(error.message).toBe(
-            'baseMocks should be an object of object of functions.'
+            'mocks should be an object of object of functions.'
           );
         }
       });
@@ -777,7 +777,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(`
           query test {
@@ -798,7 +798,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         const result = server(`
           query test {
@@ -819,7 +819,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, mocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -839,7 +839,7 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when there is no base mock for a field that is a scalar', () => {
-        const server = mockServer(schemaDefinition, {});
+        const server = mockServer(schemaDefinition, {}, null);
 
         expect.assertions(1);
         try {
@@ -857,7 +857,7 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when there is no base mock for a field that is a non-null scalar', () => {
-        const server = mockServer(schemaDefinition, {});
+        const server = mockServer(schemaDefinition, {}, null);
 
         expect.assertions(1);
         try {
@@ -875,15 +875,15 @@ describe('mockServer', () => {
       });
     });
 
-    describe('baseMocks functions', () => {
+    describe('mocks functions', () => {
       it('Throws an error when a base mock returns null', () => {
-        const baseMocks = {
+        const mocks = {
           Object: {
             property: () => null
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -903,7 +903,7 @@ describe('mockServer', () => {
       });
 
       it('Throws a validation error when a base mock throws an error', () => {
-        const baseMocks = {
+        const mocks = {
           Object: {
             property: () => {
               throw Error('Object.property.throw');
@@ -911,7 +911,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -934,13 +934,13 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock returns a promise', () => {
-        const baseMocks = {
+        const mocks = {
           Object: {
             property: () => new Promise(() => 'Object.property.Promise')
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -961,13 +961,13 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock returns a non-nested undefined', () => {
-        const baseMocks = {
+        const mocks = {
           Object: {
             property: () => {}
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -987,13 +987,13 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock for a leaf field returns an invalid value.', () => {
-        const baseMocks = {
+        const mocks = {
           Query: {
             scalar: () => ({})
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1011,13 +1011,13 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock for an object field returns an invalid value.', () => {
-        const baseMocks = {
+        const mocks = {
           Query: {
             nonNullObject: () => 0
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1037,7 +1037,7 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock for a list field returns an invalid value.', () => {
-        const baseMocks = {
+        const mocks = {
           Query: {
             listOfObjects: () => ({})
           },
@@ -1046,7 +1046,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1066,7 +1066,7 @@ describe('mockServer', () => {
       });
 
       it('Throws an error when a base mock returns a nested field that does not exist', () => {
-        const baseMocks = {
+        const mocks = {
           Query: {
             object: () => ({
               doesNotExist: () => {}
@@ -1077,7 +1077,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1099,7 +1099,7 @@ describe('mockServer', () => {
 
       it('Validates the object nested values returned by a base mock', () => {
         // We use "Throws an error when a base mock returns null" as an example
-        const baseMocks = {
+        const mocks = {
           Query: {
             object: () => ({
               property: null
@@ -1110,7 +1110,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1131,7 +1131,7 @@ describe('mockServer', () => {
 
       it('Validates the mock list nested values returned by a base mock', () => {
         // We use "Throws an error when a base mock returns null" as an example
-        const baseMocks = {
+        const mocks = {
           Query: {
             listOfObjects: mockList(2, () => ({
               property: null
@@ -1142,7 +1142,7 @@ describe('mockServer', () => {
           }
         };
 
-        const server = mockServer(schemaDefinition, baseMocks);
+        const server = mockServer(schemaDefinition, mocks, null);
 
         expect.assertions(1);
         try {
@@ -1288,7 +1288,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       const result = server(`
         query test {
@@ -1314,7 +1314,7 @@ describe('mockServer', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks);
+      const server = mockServer(schemaDefinition, mocks, null);
 
       expect.assertions(1);
       try {

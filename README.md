@@ -1072,6 +1072,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
 - [x] Add helpers for Relay-compliant schemas
 - [x] Add documentation
 - [ ] Add default mocks for standard scalar fields
+- [ ] Add test for list of scalars
 - [ ] Add support for Enum
 - [ ] Add support for custom scalar fields
 - [ ] Add FAQ: comparison with `graphql-tools`, etc
