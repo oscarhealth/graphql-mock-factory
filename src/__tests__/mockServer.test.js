@@ -306,7 +306,7 @@ describe('mockServer', () => {
       });
     });
 
-    describe('queryMock parameter', () => {
+    describe('mockOverride parameter', () => {
       it('Returns null when a value is set to null', () => {
         const mocks = {
           Object: {
@@ -411,9 +411,9 @@ describe('mockServer', () => {
           {},
           {
             object: {
-              property: 'queryMock.object.property',
+              property: 'mockOverride.object.property',
               object: ({ argument }) => ({
-                property: `queryMock.object.object.property:${argument}`
+                property: `mockOverride.object.object.property:${argument}`
               })
             }
           }
@@ -423,10 +423,10 @@ describe('mockServer', () => {
           data: {
             object: {
               object: {
-                property: 'queryMock.object.object.property:ARGUMENT',
+                property: 'mockOverride.object.object.property:ARGUMENT',
                 property2: 'Object.property2'
               },
-              property: 'queryMock.object.property',
+              property: 'mockOverride.object.property',
               property2: 'Query.object.property2'
             }
           }
@@ -456,7 +456,7 @@ describe('mockServer', () => {
           {},
           {
             listOfObjects: [
-              { property: 'queryMock.listOfObject.0.property' },
+              { property: 'mockOverride.listOfObject.0.property' },
               {},
               null,
               undefined
@@ -467,7 +467,7 @@ describe('mockServer', () => {
         expect(result).toEqual({
           data: {
             listOfObjects: [
-              { property: 'queryMock.listOfObject.0.property' },
+              { property: 'mockOverride.listOfObject.0.property' },
               { property: 'Object.property' },
               null,
               { property: 'Object.property' }
@@ -504,10 +504,10 @@ describe('mockServer', () => {
           {
             listOfObjects: ({ argument }) => [
               {
-                property: `queryMock.listOfObjects.0.property:${argument}`
+                property: `mockOverride.listOfObjects.0.property:${argument}`
               },
               {
-                property2: `queryMock.listOfObjects.0.property2`
+                property2: `mockOverride.listOfObjects.0.property2`
               },
               {}
             ]
@@ -518,12 +518,12 @@ describe('mockServer', () => {
           data: {
             listOfObjects: [
               {
-                property: 'queryMock.listOfObjects.0.property:ARGUMENT',
+                property: 'mockOverride.listOfObjects.0.property:ARGUMENT',
                 property2: 'Object.property2'
               },
               {
                 property: 'Query.listOfObjects.1:ARGUMENT',
-                property2: 'queryMock.listOfObjects.0.property2'
+                property2: 'mockOverride.listOfObjects.0.property2'
               },
               {
                 property: 'Query.listOfObjects.2:ARGUMENT',
@@ -555,7 +555,7 @@ describe('mockServer', () => {
           {},
           {
             object: {
-              aliasedPropety: 'queryMock.object.property'
+              aliasedPropety: 'mockOverride.object.property'
             }
           }
         );
@@ -563,7 +563,7 @@ describe('mockServer', () => {
         expect(result).toEqual({
           data: {
             object: {
-              aliasedPropety: 'queryMock.object.property',
+              aliasedPropety: 'mockOverride.object.property',
               property: 'Object.property'
             }
           }
@@ -595,10 +595,10 @@ describe('mockServer', () => {
           {},
           {
             aliasedObject: {
-              aliasedProperty: 'queryMock.aliasedObject.aliasedProperty',
+              aliasedProperty: 'mockOverride.aliasedObject.aliasedProperty',
               aliasedObject: {
                 aliasedProperty:
-                  'queryMock.aliasedObject.aliasedProperty.aliasedProperty'
+                  'mockOverride.aliasedObject.aliasedProperty.aliasedProperty'
               }
             }
           }
@@ -608,11 +608,11 @@ describe('mockServer', () => {
           data: {
             aliasedObject: {
               property: 'Object.property',
-              aliasedProperty: 'queryMock.aliasedObject.aliasedProperty',
+              aliasedProperty: 'mockOverride.aliasedObject.aliasedProperty',
               aliasedObject: {
                 property: 'Object.property',
                 aliasedProperty:
-                  'queryMock.aliasedObject.aliasedProperty.aliasedProperty'
+                  'mockOverride.aliasedObject.aliasedProperty.aliasedProperty'
               }
             }
           }
@@ -644,10 +644,10 @@ describe('mockServer', () => {
           {},
           {
             aliasedObject: {
-              aliasedProperty: 'queryMock.aliasedObject.aliasedProperty',
+              aliasedProperty: 'mockOverride.aliasedObject.aliasedProperty',
               aliasedObject: {
                 aliasedProperty:
-                  'queryMock.aliasedObject.aliasedProperty.aliasedProperty'
+                  'mockOverride.aliasedObject.aliasedProperty.aliasedProperty'
               }
             }
           }
@@ -657,11 +657,11 @@ describe('mockServer', () => {
           data: {
             aliasedObject: {
               property: 'Object.property',
-              aliasedProperty: 'queryMock.aliasedObject.aliasedProperty',
+              aliasedProperty: 'mockOverride.aliasedObject.aliasedProperty',
               aliasedObject: {
                 property: 'Object.property',
                 aliasedProperty:
-                  'queryMock.aliasedObject.aliasedProperty.aliasedProperty'
+                  'mockOverride.aliasedObject.aliasedProperty.aliasedProperty'
               }
             }
           }
@@ -897,7 +897,7 @@ describe('mockServer', () => {
         } catch (error) {
           expect(error.message).toBe(
             "Base mock for 'Object.property' returned 'null' for path ''.\n" +
-              "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+              "Base mocks are not allowed to return 'null'. Use 'mockOverride' to specify 'null' values instead."
           );
         }
       });
@@ -1124,7 +1124,7 @@ describe('mockServer', () => {
         } catch (error) {
           expect(error.message).toBe(
             "Base mock for 'Query.object' returned 'null' for path 'property'.\n" +
-              "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+              "Base mocks are not allowed to return 'null'. Use 'mockOverride' to specify 'null' values instead."
           );
         }
       });
@@ -1156,7 +1156,7 @@ describe('mockServer', () => {
         } catch (error) {
           expect(error.message).toBe(
             "Base mock for 'Query.listOfObjects' returned 'null' for path '0.property'.\n" +
-              "Base mocks are not allowed to return 'null'. Use 'queryMock' to specify 'null' values instead."
+              "Base mocks are not allowed to return 'null'. Use 'mockOverride' to specify 'null' values instead."
           );
         }
       });

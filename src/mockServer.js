@@ -372,7 +372,7 @@ function getBaseMockValue(
       `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
         `returned 'null' for path '${getFullPath(path)}'.\n` +
         `Base mocks are not allowed to return 'null'. ` +
-        `Use 'queryMock' to specify 'null' values instead.`
+        `Use 'mockOverride' to specify 'null' values instead.`
     );
   }
 
