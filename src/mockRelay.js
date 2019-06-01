@@ -67,8 +67,8 @@ function isEmptyString(string: ?string) {
 
 // TODO
 // - Add base mock for Node.id
-// - Automock all Relay connections
-export function getBaseMockForRelayField(parentType, field) {
+// - Automock Relay connections
+export function getRelayMock(parentType, field) {
   if (isRelayConnectionType(parentType)) {
     if (field.name === 'edges') {
       return mockList(0);

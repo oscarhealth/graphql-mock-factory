@@ -1,5 +1,5 @@
 // @flow
-import faker from 'faker/locale/en';
+import casual from 'casual';
 import { buildSchemaFromTypeDefinitions } from 'graphql-tools';
 import {
   graphqlSync,
@@ -55,12 +55,13 @@ export type QueryMockPrimitive =
 
 export type QueryMock = QueryMockPrimitive | MockFunction<QueryMockPrimitive>;
 
+// TODO Use `faker` once v5 is released
 const defaultScalarMocks = {
-  Boolean: () => faker.random.boolean(),
-  ID: () => faker.random.uuid(),
-  Int: () => faker.random.number(),
-  Float: () => faker.random.float(),
-  String: () => faker.random.words()
+  Boolean: () => casual.boolean,
+  ID: () => casual.uuid,
+  Int: () => casual.integer(-100, 100),
+  Float: () => casual.double(-100, 100),
+  String: () => casual.string
 };
 
 function getDefaultMock(parentType, field) {
@@ -335,7 +336,8 @@ function getBaseMockValue(
         `threw an error for path '${getFullPath(path)}'.\n` +
         `Base mocks are not allowed to throw errors. ` +
         `In the rare case you actually want a base mock to return a GraphQL error, ` +
-        `have the base mock return an Error() instead of throwing one.`
+        `have the base mock return an Error() instead of throwing one.\n` +
+        `Original error:\n ${err}`
     );
   }
 

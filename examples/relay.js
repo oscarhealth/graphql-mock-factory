@@ -1,9 +1,4 @@
-import {
-  mockList,
-  mockServer,
-  mockConnection,
-  getBaseMockForRelayField
-} from '../src';
+import { mockList, mockServer, mockConnection, getRelayMock } from '../src';
 import faker from 'faker/locale/en';
 
 const schemaString = `
@@ -57,7 +52,7 @@ const mockedServer = mockServer(
   schemaString,
   mocks,
   // Provides dummy mock function for un-essential Relay fields
-  getBaseMockForRelayField
+  getRelayMock
 );
 
 log(

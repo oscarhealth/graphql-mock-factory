@@ -1,10 +1,5 @@
 // TODO Re-enable flow
-import {
-  getBaseMockForRelayField,
-  mockList,
-  mockConnection,
-  mockServer
-} from '../index';
+import { getRelayMock, mockList, mockConnection, mockServer } from '../index';
 import _ from 'lodash';
 
 describe('mockConnection', () => {
@@ -193,11 +188,7 @@ describe('mockConnection', () => {
       }
     };
 
-    const server = mockServer(
-      schemaDefinition,
-      mocks,
-      getBaseMockForRelayField
-    );
+    const server = mockServer(schemaDefinition, mocks, getRelayMock);
     const query = `
       query test ($first: Int, $last: Int) {
         objectConnection(first: $first, last: $last) {
@@ -245,11 +236,7 @@ describe('mockConnection', () => {
       }
     };
 
-    const server = mockServer(
-      schemaDefinition,
-      mocks,
-      getBaseMockForRelayField
-    );
+    const server = mockServer(schemaDefinition, mocks, getRelayMock);
 
     const result = server(`
       query test {
@@ -279,7 +266,7 @@ describe('mockConnection', () => {
     });
   });
 
-  it('Is not required to use getBaseMockForRelayField', () => {
+  it('Is not required to use getRelayMock', () => {
     const mocks = {
       Query: {
         objectConnection: mockConnection()
