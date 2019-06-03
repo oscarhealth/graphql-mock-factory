@@ -82,7 +82,7 @@ mockedServer(query);
 ```
 
 <details>
-  <summary>How to disable default mock functions</summary>
+  <summary>Disable default mock functions</summary>
   <p>
 
   ```js
@@ -127,7 +127,7 @@ mockedServer(query);
 </details>
 
 
-### Overriding mocked values with `mockOverride`
+### Customizing responses with `mockOverride`
 
 When writing tests, you usually want to customize the server responses so you can test a specific case. You can easily do this by passing a `mockOverride` object.
 
@@ -137,7 +137,7 @@ When writing tests, you usually want to customize the server responses so you ca
 // by its corresponding mock function (ie `User.lastName`).
 
 mockedServer(query, mocks, 
-  // The `mockOverride` object is the 3rd parameter
+  // Pass a `mockOverride` object as the 3rd parameter
   { 
     viewer: { 
       firstName: 'Oscar',
@@ -976,15 +976,25 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
     mocks: {[string]: {[string]: MockFunction}}, 
 
     /**
-     * Optional: A function that returns a mock function for a field.
+     * Optional: An array of function that returns a mock function for a field.
      *
-     * This is a hook to define to define mock functions in a programmatic way.
-     * It will be called for each field that has not been associated to a mock 
-     * function in `mocks`. If the function does not return anything for 
-     * a field, then no mock function is attached to the field.
+     * This is a hook to define mock functions in a programmatic way.
+     * The functions will be called for each field that has not been associated to 
+     * a mock function in `mocks`. If the left-most function does not return 
+     * anything for a field, then the following functions are called. 
+     * If none of the functions returned anything for a field, then 
+     * no mock function is attached to that field.
      * 
      * For example, `getRelayMock` can be passed in to 
-     * automatically define all the Relay fields.
+     * automatically define mocks for all Relay-style connections:
+     *   mockServer(schemaDefinition, mocks, [getRelayMock, getDefaultMock])
+     * 
+     * The default value is `[getDefaulMock]`. It automatically
+     * mocks Boolean, ID, Int, Float, String and lists. 
+     * You can pass `null` to disable the default mocks.
+     * See "Usage" > "Defining mock functions" > "Disable default 
+     * mock functions"
+     * 
      */
     getMocks?: Array<
       (
@@ -1001,7 +1011,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
         field : GraphQLField,
       ) => MockFunction | void,
     ) : MockServer
-  )>;
+  )> = [getDefaultMock];
 
   /**
    * Mock function
@@ -1122,6 +1132,8 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
    * 
    * This will skip fields that have been mocked via the `mocks` 
    * parameter of `mockServer`. See "API Reference" > "mockServer".
+   * 
+   * @example mockServer(schemaDefinition, mocks, [getRelayMock])
    */
   getRelayMock()
   ```
