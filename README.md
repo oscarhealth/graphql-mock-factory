@@ -19,7 +19,7 @@ npm install graphql-mock-factory graphql
 
 ## Usage
 
-### Building a mock server with `mockServer`
+### Building a mock server
 
 Define a mock server using your schema definition string.
 
@@ -101,33 +101,16 @@ mockedServer(query);
   ...
 
   mockedServer(query);
-  // Throws an error ->
+  // Error ->
   // There is no base mock for 'Viewer.firstName'. 
   // All queried fields must have a mock function.
   // ... OMITTED ...
-
-  const mocks = {
-    User: {
-      firstName: () => faker.name.firstName(),
-      lastName: () => faker.name.lastName(),
-    }
-  };
-
-  // Set `getMocks` (ie 3rd parameter) to null.
-  const mockedServer = mockServer(schemaDefinition, mocks, null);
-
-  ...
-
-  mockedServer(query);
-  // ->
-  // { data: { viewer: { 
-  //    firstName: 'Jason', lastName: 'Wilde' } } }
   ```
   </p>
 </details>
 
 
-### Customizing responses with `mockOverride`
+### Customizing responses
 
 When writing tests, you usually want to customize the server responses so you can test a specific case. You can easily do this by passing a `mockOverride` object.
 
@@ -460,7 +443,7 @@ Objects returned by mock functions are deep merged with the return values of the
   </p>
 </details>
 
-### Mocking lists with `mockList`
+### Mocking lists
 
 Lists must be mocked with the `mockList` function.
 <details>
@@ -677,7 +660,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
   </p>
 </details>
 
-### Mocking Relay connections with `mockConnection`
+### Mocking Relay connections
 
 `mockConnection` is a convenience helper function to mock Relay connections.
 
