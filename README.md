@@ -58,9 +58,9 @@ mockedServer(query);
 //    lastName: 'sed do eiusmod tempor incididunt' } } }
 ```
 
-### Define realistic mock functions
+### Defining mock functions
 
-By default, the server will generate valid random values for most field types. While this is helpful to quickly get started, it can be confusing to work with non-realistic values. That's why we recommend you define realistic mock functions that you share with your team.
+By default, the server will generate valid random values for most field types. While this is helpful to quickly get started, it can be confusing to work with gibberish values. That's why we recommend you define realistic looking mock functions that you share with your team.
 
 ```javascript
 // Here we use `faker-js` to generate realistic mock data.
@@ -82,7 +82,7 @@ mockedServer(query);
 ```
 
 <details>
-  <summary>Disable default mocks</summary>
+  <summary>How to disable default mock functions</summary>
   <p>
 
   ```js
@@ -92,6 +92,8 @@ mockedServer(query);
   // associated with a mock function. In other words, you won't have 
   // to define a mock function for a field until it is queried for
   // the first time.
+
+  ...
 
   // Set `getMocks` (ie 3rd parameter) to null.
   const mockedServer = mockServer(schemaDefinition, {}, null);
@@ -127,14 +129,14 @@ mockedServer(query);
 
 ### Overriding mocked values with `mockOverride`
 
-You can precisely customize server responses by passing in a `mockOverride` object. 
+When writing tests, you usually want to customize the server responses so you can test a specific case. You can easily do this by passing a `mockOverride` object.
 
 ```js
 // Here we specify `viewer.firstName`. 
 // The other response field (ie `viewer.lastName`) will be generated 
 // by its corresponding mock function (ie `User.lastName`).
 
-mockedServer(query, {}, 
+mockedServer(query, mocks, 
   // The `mockOverride` object is the 3rd parameter
   { 
     viewer: { 
