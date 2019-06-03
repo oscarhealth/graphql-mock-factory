@@ -1,6 +1,6 @@
 {
   "name": "graphql-mock-factory",
-  "version": "0.0.4",
+  "version": "0.1.1",
   "description": "Easily generate customized GraphQL mock responses in JavaScript tests.",
   "main": "dist/index.js",
   "scripts": {
@@ -10,7 +10,8 @@
     "prettier": "prettier \"src/**/*\" --write",
     "build": "yarn build-dist && yarn test dist && yarn clean-dist",
     "build-dist": "rm -rf dist && babel src -d dist --source-maps && flow-copy-source src dist",
-    "clean-dist": "del dist/**/__tests__"
+    "clean-dist": "del dist/**/__tests__",
+    "publish": "yarn build && npm publish"
   },
   "keywords": [
     "graphql",
