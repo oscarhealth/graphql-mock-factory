@@ -965,6 +965,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
     )>
 
     /**
+     * Optional but recommended:
      * An object mapping to all the mock functions of each field.
      * mocks[objectTypeName][fieldName] = mockFunction
      * 
@@ -973,7 +974,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
      *
      * TODO Document interface
      */
-    mocks: {[string]: {[string]: MockFunction}}, 
+    mocks?: {[string]: {[string]: MockFunction}}, 
 
     /**
      * Optional: An array of function that returns a mock function for a field.

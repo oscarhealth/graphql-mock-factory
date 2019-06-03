@@ -76,7 +76,7 @@ export function getDefaultMock(parentType, field) {
 
 export function mockServer(
   schemaDefinition: string,
-  mocks: MockMap,
+  mocks: MockMap = {},
   getMocks = [getDefaultMock]
 ) {
   const schema: GraphQLSchema = buildSchemaFromTypeDefinitions(
