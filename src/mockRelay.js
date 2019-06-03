@@ -1,5 +1,7 @@
 // @flow
+import casual from 'casual';
 import { mockList } from './mockServer';
+import { GraphQLObjectType } from 'graphql';
 
 // Relay Utils
 
@@ -55,7 +57,9 @@ export function mockConnection(
       })),
       pageInfo: {
         hasNextPage: isForwardPagination ? hasMorePages : false,
-        hasPreviousPage: isForwardPagination ? false : hasMorePages
+        hasPreviousPage: isForwardPagination ? false : hasMorePages,
+        startCursor: pageSize > 0 ? 'cursor_0' : null,
+        endCursor: pageSize > 0 ? `cursor_${pageSize - 1}` : null
       }
     };
   };
@@ -65,10 +69,17 @@ function isEmptyString(string: ?string) {
   return !string || string.length === 0;
 }
 
-// TODO
-// - Add base mock for Node.id
-// - Automock Relay connections
 export function getRelayMock(parentType, field) {
+  if (isRelayConnectionType(field.type)) {
+    return mockConnection();
+  }
+
+  if (isRelayNode(parentType)) {
+    if (field.name === 'id') {
+      return () => casual.uuid;
+    }
+  }
+
   if (isRelayConnectionType(parentType)) {
     if (field.name === 'edges') {
       return mockList(0);
@@ -93,6 +104,10 @@ export function getRelayMock(parentType, field) {
 }
 
 function isRelayConnectionType(graphQLtype) {
+  if (!(graphQLtype instanceof GraphQLObjectType)) {
+    return false;
+  }
+
   const fields = graphQLtype.getFields();
   return (
     graphQLtype.name.endsWith('Connection') &&
@@ -103,6 +118,10 @@ function isRelayConnectionType(graphQLtype) {
 }
 
 function isRelayEdgeType(graphQLtype) {
+  if (!(graphQLtype instanceof GraphQLObjectType)) {
+    return false;
+  }
+
   const fields = graphQLtype.getFields();
   return (
     graphQLtype.name.endsWith('Edge') &&
@@ -113,10 +132,24 @@ function isRelayEdgeType(graphQLtype) {
 }
 
 function isRelayPageInfoType(graphQLtype) {
+  if (!(graphQLtype instanceof GraphQLObjectType)) {
+    return false;
+  }
+
   const fields = graphQLtype.getFields();
   return (
     graphQLtype.name === 'PageInfo' &&
     fields.hasNextPage &&
     fields.hasPreviousPage
   );
+}
+
+function isRelayNode(graphQLtype) {
+  if (!(graphQLtype instanceof GraphQLObjectType)) {
+    return false;
+  }
+
+  return graphQLtype
+    .getInterfaces()
+    .some(graphQLinterface => graphQLinterface.name === 'Node');
 }

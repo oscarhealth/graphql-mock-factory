@@ -64,7 +64,7 @@ const defaultScalarMocks = {
   String: () => casual.string
 };
 
-function getDefaultMock(parentType, field) {
+export function getDefaultMock(parentType, field) {
   const nullableType = getNullableType(field.type);
 
   if (nullableType instanceof GraphQLList) {
@@ -77,14 +77,14 @@ function getDefaultMock(parentType, field) {
 export function mockServer(
   schemaDefinition: string,
   mocks: MockMap,
-  getMock = getDefaultMock
+  getMocks = [getDefaultMock]
 ) {
   const schema: GraphQLSchema = buildSchemaFromTypeDefinitions(
     schemaDefinition
   );
 
-  if (getMock) {
-    addBaseMocks(schema, mocks, getMock);
+  if (getMocks) {
+    addMocks(schema, mocks, getMocks);
   }
 
   validateMocks(mocks, schema);
@@ -107,16 +107,19 @@ export function mockServer(
   };
 }
 
-function addBaseMocks(schema, mocks, getMock) {
+function addMocks(schema, mocks, getMocks) {
   forEachField(schema, (parentType, field) => {
     if (mocks[parentType.name] && mocks[parentType.name][field.name]) {
       return;
     }
 
-    const baseMock = getMock(parentType, field);
-    if (baseMock) {
-      mocks[parentType.name] = mocks[parentType.name] || {};
-      mocks[parentType.name][field.name] = baseMock;
+    for (let getMock of getMocks) {
+      const baseMock = getMock(parentType, field);
+      if (baseMock) {
+        mocks[parentType.name] = mocks[parentType.name] || {};
+        mocks[parentType.name][field.name] = baseMock;
+        return;
+      }
     }
   });
 }
