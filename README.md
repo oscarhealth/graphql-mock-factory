@@ -1,6 +1,6 @@
-# graphql-mock-factory
+# [graphql-mock-factory](https://github.com/oscarhealth/graphql-mock-factory)
 
-A JavaScript library to easily generate mock GraphQL responses. This is useful to write robust tests with minimum boilerplate. It is similar to the mocking functionality of [graphql-tools](https://www.apollographql.com/docs/graphql-tools/mocking/) but allows to precisely customize the response of each query.
+A JavaScript library to easily generate mock GraphQL responses. It lets you write robust tests with minimum fixture boilerplate. It is similar to the mocking functionality of [graphql-tools](https://www.apollographql.com/docs/graphql-tools/mocking/) but allows you to precisely customize the response of each query.
 
 ## Design goals
 

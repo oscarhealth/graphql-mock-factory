@@ -28,7 +28,7 @@ describe('getDefautMock', () => {
     }
   `;
 
-  fit('Provides default mocks for standard scalar fields and lists', () => {
+  it('Provides default mocks for standard scalar fields and lists', () => {
     const server = mockServer(schemaDefinition, {});
 
     const result = server(`
