@@ -1,22 +1,16 @@
 // @flow
-import casual from 'casual';
 import { buildSchemaFromTypeDefinitions } from 'graphql-tools';
 import {
   graphqlSync,
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLEnumType,
-  GraphQLUnionType,
   GraphQLInterfaceType,
-  GraphQLScalarType,
   GraphQLList,
   getNullableType,
   getNamedType,
-  GraphQLNonNull,
-  isLeafType,
-  isScalarType
+  isLeafType
 } from 'graphql';
-
 import type {
   GraphQLInt,
   GraphQLType,
@@ -26,6 +20,8 @@ import type {
   GraphQLFieldResolver,
   GraphQLOutputType
 } from 'graphql';
+import { getDefaultMocks } from './defaultMocks';
+import { MockList } from './mockList';
 
 export type FieldArgs = { [string]: any };
 
@@ -55,29 +51,10 @@ export type QueryMockPrimitive =
 
 export type QueryMock = QueryMockPrimitive | MockFunction<QueryMockPrimitive>;
 
-// TODO Use `faker` once v5 is released
-const defaultScalarMocks = {
-  Boolean: () => casual.boolean,
-  ID: () => casual.uuid,
-  Int: () => casual.integer(-100, 100),
-  Float: () => casual.double(-100, 100),
-  String: () => casual.string
-};
-
-export function getDefaultMock(parentType, field) {
-  const nullableType = getNullableType(field.type);
-
-  if (nullableType instanceof GraphQLList) {
-    return mockList(2);
-  }
-
-  return defaultScalarMocks[nullableType.name];
-}
-
 export function mockServer(
   schemaDefinition: string,
   mocks: MockMap = {},
-  getMocks = [getDefaultMock]
+  getMocks = getDefaultMocks
 ) {
   const schema: GraphQLSchema = buildSchemaFromTypeDefinitions(
     schemaDefinition
@@ -501,29 +478,6 @@ function getFieldMock(
         `All queried fields must have a base mock.`
     );
   }
-}
-
-type MockListFunction<T> = ({ [string]: any }, number) => T;
-
-export class MockList<T: BaseMockPrimitive | QueryMockPrimitive> {
-  length: number;
-  mockFunction: MockListFunction<T>;
-
-  constructor(length: number, mockFunction?: MockListFunction<T>): void {
-    this.length = length;
-    // https://stackoverflow.com/questions/54873504/how-to-type-a-generic-function-that-returns-subtypes
-    // $FlowFixMe Figure out to parameterize this generic class and default to () => ({})
-    this.mockFunction = mockFunction ? mockFunction : () => ({});
-  }
-}
-
-export function mockList<T: BaseMockPrimitive | QueryMockPrimitive>(
-  size: number,
-  itemMock?: MockListFunction<T>
-) {
-  return function() {
-    return new MockList<T>(size, itemMock);
-  };
 }
 
 // Input Validation

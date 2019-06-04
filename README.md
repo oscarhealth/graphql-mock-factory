@@ -971,11 +971,14 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
      * 
      * For example, `getRelayMock` can be passed in to 
      * automatically define mocks for all Relay-style connections:
-     *   mockServer(schemaDefinition, mocks, [getRelayMock, getDefaultMock])
+     *   mockServer(schemaDefinition, mocks, [getRelayMock, ...getDefaultMocks])
      * 
-     * The default value is `[getDefaulMock]`. It automatically
-     * mocks Boolean, ID, Int, Float, String and lists. 
-     * You can pass `null` to disable the default mocks.
+     * The default value is `getDefaulMocks`. It automatically
+     * mocks:
+     *  - `Boolean`, `ID`, `Int`, `Float` and `String` via `getDefautScalarMock`
+     *  - lists via `getDefaultListMock`
+     *  - enums via `getDefaultEnumMock`
+     * You can pass `null` to disable all the default mocks.
      * See "Usage" > "Defining mock functions" > "Disable default 
      * mock functions"
      * 
@@ -995,7 +998,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
         field : GraphQLField,
       ) => MockFunction | void,
     ) : MockServer
-  )> = [getDefaultMock];
+  )> = getDefaultMocks;
 
   /**
    * Mock function

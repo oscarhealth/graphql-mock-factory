@@ -1,6 +1,6 @@
 // TODO Re-enable flow
 import {
-  getDefaultMock,
+  getDefaultMocks,
   getRelayMock,
   mockList,
   mockConnection,
@@ -416,10 +416,10 @@ describe('mockRelay', () => {
       expect(connection.pageInfo.endCursor).toBe('cursor_0');
     });
 
-    it('Works with getDefaultMock', () => {
+    it('Works with getDefaultMocks', () => {
       const server = mockServer(schemaDefinition, {}, [
         getRelayMock,
-        getDefaultMock
+        ...getDefaultMocks
       ]);
       const query = `
         query test {

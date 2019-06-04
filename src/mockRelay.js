@@ -1,6 +1,6 @@
 // @flow
 import casual from 'casual';
-import { mockList } from './mockServer';
+import { mockList } from './mockList';
 import { GraphQLObjectType } from 'graphql';
 
 // Relay Utils
