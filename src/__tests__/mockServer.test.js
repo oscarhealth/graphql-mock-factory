@@ -1,4 +1,5 @@
 // @flow
+import { getNullableType } from 'graphql';
 import _ from 'lodash';
 import { mockServer, mockList } from '../index';
 
@@ -1332,6 +1333,177 @@ describe('mockServer', () => {
           'More than 1 interface for this field. Define base mock on the type.'
         );
       }
+    });
+  });
+
+  describe('Custom scalars', () => {
+    const schemaDefinition = `
+      schema {
+        query: Query
+      }
+
+      type Query {
+        customScalar: CustomScalar
+        property(customScalar: CustomScalar): CustomScalar
+      }
+    
+      scalar CustomScalar
+    `;
+
+    it('Is possible to pass and return any type', () => {
+      const mocks = {
+        Query: {
+          customScalar: () => 'Query.customScalar'
+        }
+      };
+
+      const server = mockServer(schemaDefinition, mocks, null);
+
+      const mockOverride = {
+        bool: true,
+        float: 0.1,
+        id: 'ID',
+        int: 1,
+        list: [true, 1, 'string'],
+        object: {
+          key: 'value'
+        },
+        string: 'string'
+      };
+
+      const result = server(
+        `
+        query test {
+          customScalar
+          bool: customScalar
+          float: customScalar
+          id: customScalar 
+          int: customScalar
+          list: customScalar
+          object: customScalar
+          string: customScalar
+        }
+      `,
+        {},
+        mockOverride
+      );
+
+      expect(result).toEqual({
+        data: {
+          customScalar: 'Query.customScalar',
+          ...mockOverride
+        }
+      });
+    });
+
+    it('Is possible to pass in any type in the query string', () => {
+      const mocks = {
+        Query: {
+          property: ({ customScalar }) => customScalar
+        }
+      };
+
+      const server = mockServer(schemaDefinition, mocks, null);
+
+      const result = server(`
+        query test {
+          bool: property(customScalar: true)
+          float: property(customScalar: 0.1)
+          id: property(customScalar: "ID")
+          int: property(customScalar: 1)
+          list: property(customScalar: [true, 1, "string"])
+          object: property(customScalar: {key: "value"})
+          string: property(customScalar: "string")
+        }
+      `);
+
+      expect(result).toEqual({
+        data: {
+          bool: true,
+          float: 0.1,
+          id: 'ID',
+          int: 1,
+          list: [true, 1, 'string'],
+          object: {
+            key: 'value'
+          },
+          string: 'string'
+        }
+      });
+    });
+
+    it('Is possible to pass in any type as a variable', () => {
+      const mocks = {
+        Query: {
+          property: ({ customScalar }) => customScalar
+        }
+      };
+
+      const server = mockServer(schemaDefinition, mocks, null);
+
+      const variables = {
+        bool: true,
+        float: 0.1,
+        id: 'ID',
+        int: 1,
+        list: [true, 1, 'string'],
+        object: {
+          key: 'value'
+        },
+        string: 'string'
+      };
+
+      const result = server(
+        `
+        query test (
+          $bool: CustomScalar
+          $float: CustomScalar
+          $id: CustomScalar
+          $int: CustomScalar
+          $list: CustomScalar
+          $object: CustomScalar
+          $string: CustomScalar
+        ) {
+          bool: property(customScalar: $bool)
+          float: property(customScalar: $float)
+          id: property(customScalar: $id)
+          int: property(customScalar: $int)
+          list: property(customScalar: $list)
+          object: property(customScalar: $object)
+          string: property(customScalar: $string)
+        }
+      `,
+        variables
+      );
+
+      expect(result).toEqual({
+        data: {
+          ...variables
+        }
+      });
+    });
+
+    it('Can be automatically mocked', () => {
+      function getCustomScalarMock(parentType, field) {
+        const nullableType = getNullableType(field.type);
+        if (nullableType.name === 'CustomScalar') {
+          return () => 'getCustomScalarMock';
+        }
+      }
+
+      const server = mockServer(schemaDefinition, {}, [getCustomScalarMock]);
+
+      const result = server(`
+        query test {
+          customScalar
+        }
+      `);
+
+      expect(result).toEqual({
+        data: {
+          customScalar: 'getCustomScalarMock'
+        }
+      });
     });
   });
 });

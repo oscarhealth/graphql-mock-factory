@@ -118,7 +118,7 @@ function getFieldResolver(
     const mergedBaseMocks = mergeBaseMocks(baseMock, parentMock, field.type, {
       parentType: type,
       field: field,
-      path: undefined // TODO
+      path: undefined
     });
     const mergedBaseMocksValue = mergedBaseMocks(args);
 
@@ -298,6 +298,9 @@ function mergeBaseMocks(
   };
 }
 
+// TODO Rename to getMockValue
+// TODO Add path to the mock. Currently, we only show the Parent name,
+// the field name, and the path inside the merged
 function getBaseMockValue(
   graphQLType,
   baseMockInfo: BaseMockInfo,

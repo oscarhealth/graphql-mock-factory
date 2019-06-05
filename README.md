@@ -6,7 +6,7 @@ A JavaScript library to easily generate mock GraphQL responses. It lets you writ
 
 - Focus on the use case of generating precise mock data in tests.
 - Make it completely obvious how to write a mock function.
-- Deep merge mock values, objects and lists in a completely unambiguous manner.
+- Deep merge mocked objects and lists in an unambiguous manner.
 - Provide helpful validations and error messages.
 - Encourage teams to write and share sensible mock functions.
 
@@ -627,7 +627,7 @@ A `mockList` can be overriden in 2 ways.
 
 ### Simulating server errors
 
-Server errors can be simulated by including `Error` instances in `mockOverride` objects.
+A server error can be simulated by including an `Error` instance in `mockOverride`.
 
 <details>
   <summary>Example</summary>
@@ -932,7 +932,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
 
 ## API Reference
 
-**`mockServer(schemaDefinition, mocks, [getMocks]?)`**  
+**`mockServer()`**  
 <details>
   <summary>Return a mocked server. This is the entry point of this lib.</summary>
   <p>
@@ -945,7 +945,6 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
      * See https://graphql.org/learn/schema/#type-language
      */
     schemaDefinition: string, 
-    )>
 
     /**
      * Optional but recommended:
@@ -1042,7 +1041,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
   </p>
 </details>
 
-**`mockList(size, itemMock?)`**  
+**`mockList()`**  
 <details>
   <summary>Return a mock function for a list.</summary>
   <p>
@@ -1077,7 +1076,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
   </p>
 </details>
 
-**`mockConnection({maxSize?, nodeMock?}?)`**  
+**`mockConnection()`**  
 <details>
   <summary>Return a mock function for a Relay connection.</summary>
   <p>
@@ -1097,7 +1096,7 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
       /**
        * Optional: A mock function called for each node in 
        * the collection.
-       * /
+       */
       nodeMock?: ({[string]: any}, index) => any,
     },
   )
@@ -1129,13 +1128,6 @@ Server errors can be simulated by including `Error` instances in `mockOverride` 
 
 ## TODO
 
-- [x] Add extensive tests
-- [x] Add helpful validation errors
-- [x] Add helpers for Relay-compliant schemas
-- [x] Add documentation
-- [x] Add default mocks for standard scalar fields
-- [x] Add default mocks for Enum
-- [ ] Add support for custom scalar fields
 - [ ] Add FAQ: comparison with `graphql-tools`, etc
 - [ ] Add recipes with common testing patterns
 - [ ] Fix Flow types 
