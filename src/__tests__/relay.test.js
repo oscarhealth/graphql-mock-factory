@@ -1,14 +1,8 @@
 // TODO Re-enable flow
-import {
-  getDefaultMocks,
-  getRelayMock,
-  mockList,
-  mockConnection,
-  mockServer
-} from '../index';
+import { automockRelay, mockConnection, mockList, mockServer } from '../index';
 import _ from 'lodash';
 
-describe('mockRelay', () => {
+describe('relay', () => {
   const schemaDefinition = `
     schema {
       query: Query
@@ -45,7 +39,7 @@ describe('mockRelay', () => {
     }
   `;
 
-  describe('mockRelay', () => {
+  describe('mockConnection', () => {
     it('Returns an error when both first and last are set', () => {
       const mocks = {
         Query: {
@@ -149,7 +143,7 @@ describe('mockRelay', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks, [getRelayMock]);
+      const server = mockServer(schemaDefinition, mocks, [automockRelay]);
       const query = `
         query test ($first: Int, $last: Int) {
           objectConnection(first: $first, last: $last) {
@@ -192,7 +186,7 @@ describe('mockRelay', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks, [getRelayMock]);
+      const server = mockServer(schemaDefinition, mocks, [automockRelay]);
       const query = `
         query test ($first: Int, $last: Int) {
           objectConnection(first: $first, last: $last) {
@@ -240,7 +234,7 @@ describe('mockRelay', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks, [getRelayMock]);
+      const server = mockServer(schemaDefinition, mocks, [automockRelay]);
 
       const result = server(`
         query test {
@@ -277,7 +271,7 @@ describe('mockRelay', () => {
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks, [getRelayMock]);
+      const server = mockServer(schemaDefinition, mocks, [automockRelay]);
 
       const result = server(
         `
@@ -316,7 +310,7 @@ describe('mockRelay', () => {
       });
     });
 
-    it('Is not required to use getRelayMock nor getDefaultMock', () => {
+    it('Is not required to use any automock', () => {
       const mocks = {
         Query: {
           objectConnection: mockConnection()
@@ -374,15 +368,15 @@ describe('mockRelay', () => {
     });
   });
 
-  describe('getRelayMock', () => {
-    it('Provides mocks for all the Relay fields', () => {
+  describe('automockRelay', () => {
+    it('Automocks all the Relay fields', () => {
       const mocks = {
         Object: {
           property: () => 'Object.property'
         }
       };
 
-      const server = mockServer(schemaDefinition, mocks, [getRelayMock]);
+      const server = mockServer(schemaDefinition, mocks, [automockRelay]);
       const query = `
         query test {
           objectConnection(first: 1) {
@@ -416,11 +410,8 @@ describe('mockRelay', () => {
       expect(connection.pageInfo.endCursor).toBe('cursor_0');
     });
 
-    it('Works with getDefaultMocks', () => {
-      const server = mockServer(schemaDefinition, {}, [
-        getRelayMock,
-        ...getDefaultMocks
-      ]);
+    it('Is enabled by default', () => {
+      const server = mockServer(schemaDefinition);
       const query = `
         query test {
           objectConnection(first: 1) {

@@ -3,7 +3,7 @@ import { getNullableType } from 'graphql';
 import _ from 'lodash';
 import { mockServer, mockList } from '../index';
 
-describe('mockServer', () => {
+describe('server', () => {
   describe('Mock precedence rules', () => {
     const schemaDefinition = `
       schema {

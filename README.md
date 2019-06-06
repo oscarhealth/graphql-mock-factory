@@ -60,7 +60,7 @@ mockedServer(query);
 
 ### Defining mock functions
 
-By default, the server will generate valid random values for most field types. While this is helpful to quickly get started, it can be confusing to work with gibberish values. That's why we recommend you define realistic looking mock functions that you share with your team.
+By default, the server will automock most field types. While this is helpful to quickly get started, it can be confusing to work with gibberish values. That's why we recommend you define realistic looking mock functions that you share with your team.
 
 ```javascript
 // Here we use `faker-js` to generate realistic mock data.
@@ -82,12 +82,12 @@ mockedServer(query);
 ```
 
 <details>
-  <summary>Disable default mock functions</summary>
+  <summary>Tip to mock fields progressively</summary>
   <p>
 
   ```js
-  // In order to help you or your team define realistic mock functions 
-  // progressively, you can disable all default mock functions.
+  // In order to help you define realistic mock functions 
+  // progressively, you can disable some or all of the autommocking.
   // After that, an error will be thrown if a queried field is not 
   // associated with a mock function. In other words, you won't have 
   // to define a mock function for a field until it is queried for
@@ -95,7 +95,8 @@ mockedServer(query);
 
   ...
 
-  // Set `getMocks` (ie 3rd parameter) to null.
+  // Setting `automocks` (ie 3rd parameter) to null will disable 
+  // all default automocks. See below for complete list.
   const mockedServer = mockServer(schemaDefinition, {}, null);
 
   ...
@@ -105,6 +106,44 @@ mockedServer(query);
   // There is no base mock for 'Viewer.firstName'. 
   // All queried fields must have a mock function.
   // ... OMITTED ...
+  ```
+  </p>
+</details>
+
+<details>
+  <summary>Fields automocked by default</summary>
+  <p>
+
+  ```js
+  // The default value of the `automocks` param of `mockServer` is 
+  // an array of default automock functions:
+  const defaultAutomocks = [
+
+    // Boolean are picked randomly.
+    // ID are random uuid.
+    // Int are random integers between 100 and -100.
+    // Float are random float between 100 and -100.
+    // String are random short "lorem ipsum" strings.
+    automockScalars(scalarMocks),
+
+    // Enum values are picked randomly.
+    automockEnums,
+
+    // All list are of size 2, ie mocked with `mockList(2)`.
+    automockLists,
+
+    // All Relay connections return the number of requested 
+    // nodes, ie mocked with `mockConnection()`.
+    automockRelay,
+  ];
+
+  // It is possible to only automock certain fields.
+  // For example, here only enums and lists are automocked:
+  mockServer(schemaDefinition, mocks, [automockEnum, automockLists])
+
+  // You can also pass in your automock function.
+  // This may be useful if you have custom scalars.
+  // See "API Reference" > "mockServer" > "automocks"
   ```
   </p>
 </details>
@@ -577,7 +616,7 @@ A `mockList` can be overriden in 2 ways.
 </details>
 
 <details>
-  <summary>Overriding with another `mockList` (less common)</summary>
+  <summary>Overriding with another `mockList`</summary>
   <p>
 
   ```js
@@ -672,7 +711,7 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
   // By default, `mockConnection` returns the number of requested nodes.
   // Note that `hasNextPage` and `hasPreviousPage` behave as expected.
 
-  import { mockServer, mockConnection, getRelayMock } from 'graphql-mock-factory';
+  import { mockServer, mockConnection, automockRelay } from 'graphql-mock-factory';
 
   ...
 
@@ -693,12 +732,7 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
     }
   };
 
-  const mockedServer = mockServer(
-    schemaDefinition,
-    mocks,
-    // Adds mock functions for un-essential Relay fields
-    [getRelayMock],
-  );
+  const mockedServer = mockServer(schemaDefinition, mocks);
 
   mockedServer(`
     query {
@@ -731,7 +765,7 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
 </details>
 
 <details>
-  <summary>The collection size can be set with `maxSize` option</summary>
+  <summary>The collection size can be set with `maxSize`</summary>
   <p>
 
   ```js
@@ -777,7 +811,7 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
 </details>
 
 <details>
-  <summary>Nodes can be customized with `nodeMock` option</summary>
+  <summary>Nodes can be customized with `nodeMock`</summary>
   <p>
 
   ```js
@@ -925,7 +959,7 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
   <p>
 
   ```js
-  // TODO Add test and example
+  // TODO Add documentation
   ```
   </p>
 </details>
@@ -954,7 +988,7 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
      * All queried fields are currently required to have a base mock function defined.
      * This will be probably relaxed in the future.
      *
-     * TODO Document interface
+     * TODO Document interface mocks
      */
     mocks?: {[string]: {[string]: MockFunction}}, 
 
@@ -968,21 +1002,23 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
      * If none of the functions returned anything for a field, then 
      * no mock function is attached to that field.
      * 
-     * For example, `getRelayMock` can be passed in to 
-     * automatically define mocks for all Relay-style connections:
-     *   mockServer(schemaDefinition, mocks, [getRelayMock, ...getDefaultMocks])
+     * For example, this is can be used to automock custom scalars:
+     *   mockServer(schemaDefinition, mocks, [
+     *     ...defaultAutomocks,
+     *     automockScalars({MyScalar: myScalarMock}),
+     *   ])
      * 
-     * The default value is `getDefaulMocks`. It automatically
+     * The default value is `defaultAutomock`. It automatically
      * mocks:
-     *  - `Boolean`, `ID`, `Int`, `Float` and `String` via `getDefautScalarMock`
+     *  - `Boolean`, `ID`, `Int`, `Float` and `String` via `automockScalars(scalarMocks)`
      *  - lists via `getDefaultListMock`
-     *  - enums via `getDefaultEnumMock`
+     *  - enums via `automockLists`
+     *  - Relay connections via `automockRelay`
      * You can pass `null` to disable all the default mocks.
-     * See "Usage" > "Defining mock functions" > "Disable default 
-     * mock functions"
+     * See "Usage" > "Defining mock functions" > "Disable automocks"
      * 
      */
-    getMocks?: Array<
+    automocks?: Array<
       (
         /**
         * The GraphQL type of the parent ObjectType containing the field.
@@ -997,7 +1033,7 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
         field : GraphQLField,
       ) => MockFunction | void,
     ) : MockServer
-  )> = getDefaultMocks;
+  )> = defaultAutomocks;
 
   /**
    * Mock function
@@ -1104,7 +1140,7 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
   </p>
 </details>
 
-**`getRelayMock()`**  
+**`automockRelay()`**  
 <details>
   <summary>Automatically mock all Relay fields.</summary>
   <p>
@@ -1119,9 +1155,9 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
    * This will skip fields that have been mocked via the `mocks` 
    * parameter of `mockServer`. See "API Reference" > "mockServer".
    * 
-   * @example mockServer(schemaDefinition, mocks, [getRelayMock])
+   * @example mockServer(schemaDefinition, mocks, [automockRelay])
    */
-  getRelayMock()
+  automockRelay()
   ```
   </p>
 </details>

@@ -1,6 +1,6 @@
 // @flow
 import casual from 'casual';
-import { mockList } from './mockList';
+import { mockList } from './list';
 import { GraphQLObjectType } from 'graphql';
 
 // Relay Utils
@@ -18,7 +18,6 @@ type RelayConnectionMockParams = {
 };
 
 // TODO Add better types
-// TODO Support startCursor and endCursor
 export function mockConnection(
   params: ?RelayConnectionMockParams
 ): RelayConnactionParams => mixed {
@@ -69,7 +68,7 @@ function isEmptyString(string: ?string) {
   return !string || string.length === 0;
 }
 
-export function getRelayMock(parentType, field) {
+export function automockRelay(parentType, field) {
   if (isRelayConnectionType(field.type)) {
     return mockConnection();
   }
@@ -79,6 +78,10 @@ export function getRelayMock(parentType, field) {
       return () => casual.uuid;
     }
   }
+
+  // Add dummy mocks for Relay all fields even though
+  // they are populated by `mockConnection` so there is
+  // no dependency on `defaultAutomocks`.
 
   if (isRelayConnectionType(parentType)) {
     if (field.name === 'edges') {

@@ -1,4 +1,6 @@
 // @flow
+import { GraphQLList, getNullableType } from 'graphql';
+
 export type MockListFunction<T> = ({ [string]: any }, number) => T;
 
 export class MockList<T: BaseMockPrimitive | QueryMockPrimitive> {
@@ -20,4 +22,11 @@ export function mockList<T: BaseMockPrimitive | QueryMockPrimitive>(
   return function() {
     return new MockList<T>(size, itemMock);
   };
+}
+
+export function automockLists(parentType, field) {
+  const nullableType = getNullableType(field.type);
+  if (nullableType instanceof GraphQLList) {
+    return mockList(2);
+  }
 }
