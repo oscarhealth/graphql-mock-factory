@@ -20,8 +20,8 @@ import type {
   GraphQLFieldResolver,
   GraphQLOutputType
 } from 'graphql';
-import { getDefaultMocks } from './defaultMocks';
-import { MockList } from './mockList';
+import { defaultAutomocks } from './automock';
+import { MockList } from './list';
 
 export type FieldArgs = { [string]: any };
 
@@ -54,14 +54,14 @@ export type QueryMock = QueryMockPrimitive | MockFunction<QueryMockPrimitive>;
 export function mockServer(
   schemaDefinition: string,
   mocks: MockMap = {},
-  getMocks = getDefaultMocks
+  automocks = defaultAutomocks
 ) {
   const schema: GraphQLSchema = buildSchemaFromTypeDefinitions(
     schemaDefinition
   );
 
-  if (getMocks) {
-    addMocks(schema, mocks, getMocks);
+  if (automocks) {
+    addAutomocks(schema, mocks, automocks);
   }
 
   validateMocks(mocks, schema);
@@ -84,7 +84,7 @@ export function mockServer(
   };
 }
 
-function addMocks(schema, mocks, getMocks) {
+function addAutomocks(schema, mocks, getMocks) {
   forEachField(schema, (parentType, field) => {
     if (mocks[parentType.name] && mocks[parentType.name][field.name]) {
       return;
