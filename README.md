@@ -82,12 +82,12 @@ mockedServer(query);
 ```
 
 <details>
-  <summary>Disable automocking</summary>
+  <summary>Tip to mock fields progressively</summary>
   <p>
 
   ```js
-  // In order to help you or your team define realistic mock functions 
-  // progressively, you can disable all default mock functions.
+  // In order to help you define realistic mock functions 
+  // progressively, you can disable the autommocking.
   // After that, an error will be thrown if a queried field is not 
   // associated with a mock function. In other words, you won't have 
   // to define a mock function for a field until it is queried for
@@ -110,11 +110,40 @@ mockedServer(query);
 </details>
 
 <details>
-  <summary>Automock only certain fields</summary>
+  <summary>Fields automocked by default</summary>
   <p>
 
   ```js
-  // TODO Add documentation
+  // The default value of the `automocks` param of `mockServer` is 
+  // an array of default automock functions:
+
+  const defaultAutomocks = [
+    
+    // Boolean are picked randomly
+    // ID are random uuid
+    // Int are random integers between 100 and -100
+    // Float are random float between 100 and -100
+    // String are random short "lorem ipsum" strings
+    automockScalars(scalarMocks),
+
+    // Enum values are picked randomly
+    automockEnums,
+
+    // All list are of size 2, ie mockList(2).
+    automockLists,
+
+    // Relay connections return the number of requested nodes,
+    // ie mockConnection()
+    automockRelay,
+  ];
+
+  // It is possible to only automock certain fields.
+  // For example, here only enums and lists are automocked:
+  mockServer(schemaDefinition, mocks, [automockEnum, automockLists])
+
+  // You can also pass in your automock function.
+  // This may be useful if you have custom scalars.
+  // See "API Reference" > "mockServer" > "automocks"
   ```
   </p>
 </details>
@@ -930,7 +959,7 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
   <p>
 
   ```js
-  // TODO Add test and example
+  // TODO Add documentation
   ```
   </p>
 </details>
