@@ -1140,28 +1140,6 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
   </p>
 </details>
 
-**`automockRelay()`**  
-<details>
-  <summary>Automatically mock all Relay fields.</summary>
-  <p>
-
-  ```js
-  /**
-   * Strongly recommended if you use Relay.
-   * 
-   * Add mock functions to all the Relay-specific fields in your schema.
-   * It is equivalent to calling `mockConnection` on all connection fields.
-   * 
-   * This will skip fields that have been mocked via the `mocks` 
-   * parameter of `mockServer`. See "API Reference" > "mockServer".
-   * 
-   * @example mockServer(schemaDefinition, mocks, [automockRelay])
-   */
-  automockRelay()
-  ```
-  </p>
-</details>
-
 ## TODO
 
 - [ ] Add FAQ: comparison with `graphql-tools`, etc
