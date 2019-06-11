@@ -1145,19 +1145,13 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
 ### Why use this over `apollo` / `graphql-tools` functionality?
 
 `graphql-tools` introduced the idea of mocking an entire GraphQL server using only its schema definition. While it allows to define resolver functions to do more advanced mocking, it has a number of limitations that makes it not perfectly fitted to generate mock data in testing.
-
 1. There is no way to customize the values of aliased fields (see [example](/examples/graphql-tools/aliased.js)). This is a major problem when writing tests because you need to be able to precisely customize any values of the mocked data that a test relies on. 
-
 2. Resolver functions are ignored if the resolver function of their parent field returns an object (see [example](/examples/graphql-tools/nested.js)). This is an unexpected behavior that makes mocking non-scalar fields confusing and pointless in many cases.
-
-3. There is no hook to automock certain field types. That becomes quite repititive if you use Relay and need to mock all connection fields. 
-
+3. There is no hook to automock certain field types. That becomes quite repititive if you use Relay and need to mock all the connection fields. 
 4. It is not possible to customize mocks on a per query basis. There has been [attempts](https://blog.apollographql.com/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) to work around this but they add another layer of complexity. 
 
 In addition to these limitations, it is not completely obvious what the right way to write mock functions is  
-
 1. Why is it that object types must be mocked with resolver functions? Is it not enough to provide resolver functions for their fields?
-
 2. Why are the `root`, `context` and `info` parameters passed to the mock functions? When does it make sense to use those parameters in a mock function?
 
 
