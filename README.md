@@ -1,14 +1,13 @@
-# [graphql-mock-factory](https://github.com/oscarhealth/graphql-mock-factory)
+# graphql-mock-factory
 
-A JavaScript library to easily generate mock GraphQL responses. It lets you write robust tests with minimum fixture boilerplate. It is similar to the mocking functionality of [graphql-tools](https://www.apollographql.com/docs/graphql-tools/mocking/) but allows you to precisely customize the response of each query.
+A JavaScript library to easily generate mock GraphQL responses. It lets you write robust UI tests with minimum fixture boilerplate. This is similar to `graphql-tools`'s mocking functionality but focused primarily on testing (see [comparison](#why-use-this-over-graphql-tools-mocking-functionality)).
 
-## Design goals
-
-- Focus on the use case of generating precise mock data in tests.
-- Make it completely obvious how to write a mock function.
-- Deep merge mocked objects and lists in an unambiguous manner.
-- Provide helpful validations and error messages.
-- Encourage teams to write and share sensible mock functions.
+Main features:
+- Simple and intuitive syntax.
+- Ability to fully customize responses.
+- Helpful validations and error messages.
+- Full support for Relay connections.
+- Optional mode to encourage writing mock functions.
 
 ## Installation
 
@@ -1140,13 +1139,28 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
   </p>
 </details>
 
-## TODO
+## FAQ
 
-- [ ] Add FAQ: comparison with `graphql-tools`, etc
-- [ ] Add recipes with common testing patterns
-- [ ] Fix Flow types 
-- [ ] Add credits
+### Why use this over `graphql-tools` mocking functionality?
+
+[`graphql-tools`](https://www.apollographql.com/docs/graphql-tools/mocking/) was the first to introduce the idea of mocking an entire GraphQL server using its schema definition. Unfortunately, it has a number of limitations that prevented us from using it in our tests:
+- There is no way to customize the values of aliased fields (see [example](/examples/graphql-tools/aliased.js)). This is a deal breaker when writing tests because you need to be able to customize any value that a test relies on. 
+- Resolver functions are ignored if the resolver function of their parent field returns an object (see [example](/examples/graphql-tools/nested.js)). This is an unexpected behavior that makes mocking non-scalar fields very confusing.
+- It is not possible to customize mocks on a per query basis. There has been [attempts](https://blog.apollographql.com/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) to work around this but they add another layer of complexity (see [example](/examples/graphql-tools/mergeResolvers.js)).
+- There is no way to automock certain field types. That becomes quite repititive if you use Relay and need to mock all the connection fields (see [example](#TODO)). 
+
+In addition to these limitations, its mocking API can be confusing. For example, it is not clear why object types must be mocked with resolver functions. Is it not enough to define resolver functions for fields? Similarly, it is not clear why `root`, `context` and `info` parameters are passed to the mock functions. When does it make sense to access those parameters in a mock function?
+
+`graphql-mock-factory` aims to address all of these issues. It also has a few other features that make mocking easier:
+- Special care has been taken to raise helpful validation and error messages.
+- There is an option to enforce that realistic mock are defined and shared progressively (see [doc](#defining-mock-functions)).
+- It comes with out-of-the-box mocks for Relay connections (see [doc](#mocking-relay-connections)).
 
 ## License
 
 [Apache License 2.0](/LICENSE)
+
+## TODO
+
+- [ ] Add recipes for common client libraries
+- [ ] Fix Flow types 
