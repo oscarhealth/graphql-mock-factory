@@ -1,14 +1,8 @@
 # [graphql-mock-factory](https://github.com/oscarhealth/graphql-mock-factory)
 
-A JavaScript library to easily generate mock GraphQL responses. It lets you write robust tests with minimum fixture boilerplate. It is similar to the mocking functionality of [graphql-tools](https://www.apollographql.com/docs/graphql-tools/mocking/) but allows you to precisely customize the response of each query.
+A JavaScript library to easily generate mock GraphQL responses. It lets you write robust tests with minimum fixture boilerplate. 
 
-## Design goals
-
-- Focus on the use case of generating precise mock data in tests.
-- Make it completely obvious how to write a mock function.
-- Deep merge mocked objects and lists in an unambiguous manner.
-- Provide helpful validations and error messages.
-- Encourage teams to write and share sensible mock functions.
+The main benefit over [graphql-tools](https://www.apollographql.com/docs/graphql-tools/mocking/) mocking functionality is that it allows you to fully customize the GraphQL response. See [FAQ](#why-use-this-over-apollo--graphql-tools-functionality) for a detailed comparison.
 
 ## Installation
 
@@ -1142,18 +1136,20 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
 
 ## FAQ
 
-### Why use this over `apollo` / `graphql-tools` functionality?
+### Why use this over `graphql-tools` mocking functionality?
 
-`graphql-tools` introduced the idea of mocking an entire GraphQL server using only its schema definition. While it allows to define resolver functions to do more advanced mocking, it has a number of limitations that makes it not perfectly fitted to generate mock data in testing.
-1. There is no way to customize the values of aliased fields (see [example](/examples/graphql-tools/aliased.js)). This is a major problem when writing tests because you need to be able to precisely customize any values of the mocked data that a test relies on. 
-2. Resolver functions are ignored if the resolver function of their parent field returns an object (see [example](/examples/graphql-tools/nested.js)). This is an unexpected behavior that makes mocking non-scalar fields confusing and pointless in many cases.
-3. There is no hook to automock certain field types. That becomes quite repititive if you use Relay and need to mock all the connection fields. 
-4. It is not possible to customize mocks on a per query basis. There has been [attempts](https://blog.apollographql.com/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) to work around this but they add another layer of complexity. 
+`graphql-tools` was first to introduce the idea of mocking an entire GraphQL server using its schema definition. While it lets users define resolver functions to do more advanced mocking, it has a number of limitations that makes it not perfectly suited to mock data in tests:
+1. There is no way to customize the values of aliased fields (see [example](/examples/graphql-tools/aliased.js)). This is a deal breaker when writing tests because you need to be able to customize any value that a test relies on. 
+2. Resolver functions are ignored if the resolver function of their parent field returns an object (see [example](/examples/graphql-tools/nested.js)). This is an unexpected behavior that makes mocking non-scalar fields confusing.
+3. There is no way to automock certain field types. That becomes quite repititive if you use Relay and need to mock all the connection fields. 
+4. It is not possible to customize mocks on a per query basis. There has been [attempts](https://blog.apollographql.com/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) to work around this but they introduce their own complexity.
 
-In addition to these limitations, it is not completely obvious what the right way to write mock functions is  
-1. Why is it that object types must be mocked with resolver functions? Is it not enough to provide resolver functions for their fields?
-2. Why are the `root`, `context` and `info` parameters passed to the mock functions? When does it make sense to use those parameters in a mock function?
+In addition to these limitations, the mocking API is a little confusing. For example, why is it that object types must be mocked with resolver functions? Is it not enough to provide resolver functions for their fields? Similarly, it is not clear why the `root`, `context` and `info` parameters are passed to the mock functions. Does it ever make sense to access those parameters in a mock function?
 
+`graphql-mock-factory` aims to address all of these issues. It also has a few other features that make mocking easier:
+- Special care has been taken to raise helpful validation and error messages.
+- There is an option to enforce that realistic mock are added and shared progressively (see [doc](#defining-mock-functions)).
+- It comes with out-of-the-box mocks for all Relay connections (see [doc](#mocking-relay-connections)).
 
 ## License
 
