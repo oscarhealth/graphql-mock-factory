@@ -1,8 +1,12 @@
-# [graphql-mock-factory](https://github.com/oscarhealth/graphql-mock-factory)
+# graphql-mock-factory
 
-A JavaScript library to easily generate mock GraphQL responses. It lets you write robust tests with minimum fixture boilerplate. 
+A JavaScript library to easily generate mock GraphQL responses. It lets you write robust tests with minimum fixture boilerplate. It's like [graphql-tools](https://www.apollographql.com/docs/graphql-tools/mocking/) mocking functionality except that it allows you to fully customize mocked responses (see [full comparison](#why-use-this-over-graphql-tools-mocking-functionality)).
 
-The main benefit over [graphql-tools](https://www.apollographql.com/docs/graphql-tools/mocking/) mocking functionality is that it allows you to fully customize the GraphQL response. See [FAQ](#why-use-this-over-apollo--graphql-tools-functionality) for a detailed comparison.
+Main features:
+- Simple syntax and API.
+- Ability to fully customize responses.
+- Helpful validations and error messages.
+- Full support for Relay out-of-the-box.
 
 ## Installation
 
@@ -1146,10 +1150,12 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
 
 In addition to these limitations, the mocking API is a little confusing. For example, why is it that object types must be mocked with resolver functions? Is it not enough to provide resolver functions for their fields? Similarly, it is not clear why the `root`, `context` and `info` parameters are passed to the mock functions. Does it ever make sense to access those parameters in a mock function?
 
-`graphql-mock-factory` aims to address all of these issues. It also has a few other features that make mocking easier:
+`graphql-mock-factory` addresses all of these issues. It also has a few other features that make mocking easier:
 - Special care has been taken to raise helpful validation and error messages.
-- There is an option to enforce that realistic mock are added and shared progressively (see [doc](#defining-mock-functions)).
-- It comes with out-of-the-box mocks for all Relay connections (see [doc](#mocking-relay-connections)).
+- There is an option to enforce that realistic mock are defined and shared progressively (see [doc](#defining-mock-functions)).
+- It comes with out-of-the-box mocks for Relay connections (see [doc](#mocking-relay-connections)).
+
+
 
 ## License
 
@@ -1157,7 +1163,6 @@ In addition to these limitations, the mocking API is a little confusing. For exa
 
 ## TODO
 
-- [ ] Add FAQ: comparison with `graphql-tools`, etc
 - [ ] Add credits
 - [ ] Add recipes with common testing patterns
 - [ ] Fix Flow types 
