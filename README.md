@@ -3,10 +3,10 @@
 A JavaScript library to easily generate mock GraphQL responses. It lets you write robust UI tests with minimum fixture boilerplate. This is similar to `graphql-tools`'s mocking functionality but focused primarily on testing (see [comparison](#why-use-this-over-graphql-tools-mocking-functionality)).
 
 Main features:
-- Simple and intuitive syntax.
-- Ability to fully customize responses.
+- Simple and intuitive API. 
+- Customize responses on a per query basis.
 - Helpful validations and error messages.
-- Full support for Relay connections.
+- First class support for Relay connections.
 - Optional mode to encourage writing mock functions.
 
 ## Installation
@@ -18,9 +18,9 @@ npm install graphql-mock-factory graphql
 
 ## Usage
 
-### Building a mock server
+### Automocking your server
 
-Define a mock server using your schema definition string.
+You can automock your entire schema in one line using your schema definition string.
 
 ```javascript
 import { mockServer } from 'graphql-mock-factory';
@@ -57,65 +57,14 @@ mockedServer(query);
 //    lastName: 'sed do eiusmod tempor incididunt' } } }
 ```
 
-### Defining mock functions
-
-By default, the server will automock most field types. While this is helpful to quickly get started, it can be confusing to work with gibberish values. That's why we recommend you define realistic looking mock functions that you share with your team.
-
-```javascript
-// Here we use `faker-js` to generate realistic mock data.
-const mocks = {
-  User: {
-    firstName: () => faker.name.firstName(),
-    lastName: () => faker.name.lastName(),
-  }
-};
-
-const mockedServer = mockServer(schemaDefinition, mocks);
-
-...
-
-mockedServer(query);
-// ->
-// { data: { viewer: { 
-//    firstName: 'Jason', lastName: 'Wilde' } } }
-```
-
 <details>
-  <summary>Tip to mock fields progressively</summary>
+  <summary>List of default mocks</summary>
   <p>
 
   ```js
-  // In order to help you define realistic mock functions 
-  // progressively, you can disable some or all of the autommocking.
-  // After that, an error will be thrown if a queried field is not 
-  // associated with a mock function. In other words, you won't have 
-  // to define a mock function for a field until it is queried for
-  // the first time.
-
-  ...
-
-  // Setting `automocks` (ie 3rd parameter) to null will disable 
-  // all default automocks. See below for complete list.
-  const mockedServer = mockServer(schemaDefinition, {}, null);
-
-  ...
-
-  mockedServer(query);
-  // Error ->
-  // There is no base mock for 'Viewer.firstName'. 
-  // All queried fields must have a mock function.
-  // ... OMITTED ...
-  ```
-  </p>
-</details>
-
-<details>
-  <summary>Fields automocked by default</summary>
-  <p>
-
-  ```js
-  // The default value of the `automocks` param of `mockServer` is 
-  // an array of default automock functions:
+  // The `automocks` param (3rd param) of `mockServer` define what and 
+  // how fields are autmotically mocked. It takes an array of automock 
+  // functions. It defaults to:
   const defaultAutomocks = [
 
     // Boolean are picked randomly.
@@ -136,21 +85,77 @@ mockedServer(query);
     automockRelay,
   ];
 
-  // It is possible to only automock certain fields.
-  // For example, here only enums and lists are automocked:
-  mockServer(schemaDefinition, mocks, [automockEnum, automockLists])
+  // You can disable all default mocks by passing `null`.
+  mockServer(schemaDefinition, mocks, null)
 
-  // You can also pass in your automock function.
-  // This may be useful if you have custom scalars.
+  // Or you can override the default mocks to only automock 
+  // certain fields. Here only enums and lists are automocked:
+  mockServer(schemaDefinition, mocks, [automockEnums, automockLists])
+
+  // You can also pass in your own automock functions.
+  // This may be useful if your schema contains custom scalars.
   // See "API Reference" > "mockServer" > "automocks"
   ```
   </p>
 </details>
 
+### Defining mock functions
 
-### Customizing responses
+While fully automocking your schema is helpful to quickly get started, you can define your own mock functions for more realistic values. Your mock functions have full precedence over the default ones. 
 
-When writing tests, you usually want to customize the server responses so you can test a specific case. You can easily do this by passing a `mockOverride` object.
+```javascript
+const mocks = {
+  User: {
+    // Here we use `faker-js` to generate realistic mock data.
+    firstName: () => faker.name.firstName(),
+    lastName: () => faker.name.lastName(),
+  },
+};
+
+const mockedServer = mockServer(schemaDefinition, mocks);
+
+...
+
+mockedServer(query, mocks);
+// ->
+// { data: { 
+//    viewer: { firstName: 'Jason', lastName: 'Wilde' } } }
+```
+
+<details>
+  <summary>Tip to mock fields progressively</summary>
+  <p>
+
+  ```js
+  // In order to help you define realistic mock functions 
+  // progressively, you can disable some or all of the default mocks.
+  // After that, an error will be thrown if a queried field is not 
+  // associated with a mock function. In other words, you won't have 
+  // to define a mock function for a field until it is queried for
+  // the first time.
+
+  ...
+
+  // Setting `automocks` (ie 3rd parameter) to null will disable 
+  // all default mocks. To disable only certain default mocks, see
+  // "Usage" > "Automocking your server" > "List of default mocks".
+  const mockedServer = mockServer(schemaDefinition, {}, null);
+
+  ...
+
+  mockedServer(query);
+  // Error ->
+  // There is no base mock for 'Viewer.firstName'. 
+  // All queried fields must have a mock function.
+  // ... OMITTED ...
+  ```
+  </p>
+</details>
+
+
+### Customizing responses per test
+
+When writing a test, you can easily customize the mocked response by passing a `mockOverride` object. The values that are not specified in the `mockOverride` object will be generated by the mock functions.
 
 ```js
 // Here we specify `viewer.firstName`. 
@@ -170,10 +175,8 @@ mockedServer(query, mocks,
 //    viewer: { firstName: 'Oscar', lastName: 'Smith' } } }
 ```
 
-All the values that are not specified in the `mockOverride` object will be generated by the mock functions.
-
 <details>
-  <summary>Example with an aliased field</summary>
+  <summary>Example with aliased fields</summary>
   <p>
 
   ```js
@@ -197,7 +200,7 @@ All the values that are not specified in the `mockOverride` object will be gener
   );
   // ->
   // { data: { viewer: 
-  //   { firstName: 'Oscar', aliasedName: 'Eryn' } } }
+  //   { firstName: 'Oscar', aliasedName: 'Lee' } } }
   ```
   </p>
 </details>
@@ -292,7 +295,7 @@ All the values that are not specified in the `mockOverride` object will be gener
 
 ### Accessing field arguments
 
-Field arguments can be accessed in mock functions and in `mockOverride` objects.
+Field arguments can be accessed the same way in mock functions and in `mockOverride` objects.
 
 <details>
   <summary>Example in mock function</summary>
@@ -411,13 +414,13 @@ Objects returned by mock functions are deep merged with the return values of the
   // ->
   // { data: 
   //   { searchUser: 
-  //      { firstName: "Oscar", lastName: "Schlosser" } } }
+  //      { firstName: "Oscar", lastName: "Simpsons" } } }
   ```
   </p>
 </details>
 
 <details>
-  <summary>Example with multiple levels of nesting (less common)</summary>
+  <summary>Example with multiple levels of nesting</summary>
   <p>
 
   ```js
@@ -522,7 +525,7 @@ Lists must be mocked with the `mockList` function.
 </details>
 
 <details>
-  <summary>List items can customized with an optional function</summary>
+  <summary>List items can be customized with an optional function</summary>
   <p>
 
   ```js
@@ -566,7 +569,7 @@ Lists must be mocked with the `mockList` function.
   </p>
 </details>
 
-A `mockList` can be overriden in 2 ways.
+A `mockList` can be overriden with an array or with another `mockList`.
 
 <details>
   <summary>Overriding `mockList` with an array</summary>
@@ -615,7 +618,7 @@ A `mockList` can be overriden in 2 ways.
 </details>
 
 <details>
-  <summary>Overriding with another `mockList`</summary>
+  <summary>Overriding `mockList` with another `mockList`</summary>
   <p>
 
   ```js
@@ -663,9 +666,9 @@ A `mockList` can be overriden in 2 ways.
   </p>
 </details>
 
-### Simulating server errors
+### Simulating field errors
 
-A server error can be simulated by including an `Error` instance in `mockOverride`.
+A field error can be simulated by including an `Error` instance in `mockOverride`.
 
 <details>
   <summary>Example</summary>
@@ -889,7 +892,7 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
   </p>
 </details>
 
-`mockConnection` can be overriden like `mockList` can.
+`mockConnection` can be overriden with an array, another `mockConnection` or a `mockList`.
 
 <details>
   <summary>Overriding with an array</summary>
@@ -954,6 +957,16 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
 </details>
 
 <details>
+  <summary>Overriding with a `mockList`</summary>
+  <p>
+
+  ```js
+  // TODO Add documentation
+  ```
+  </p>
+</details>
+
+<details>
   <summary>Overriding with another `mockConnection`</summary>
   <p>
 
@@ -981,11 +994,11 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
 
     /**
      * Optional but recommended:
-     * An object mapping to all the mock functions of each field.
+     * An object mapping fields to mock functions.
      * mocks[objectTypeName][fieldName] = mockFunction
      * 
-     * All queried fields are currently required to have a base mock function defined.
-     * This will be probably relaxed in the future.
+     * All queried fields that are not automocked (via 'automocks`) 
+     * must by manually mocked here.
      *
      * TODO Document interface mocks
      */
@@ -1030,9 +1043,9 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
         * @example: `name` from `User.name`
         */
         field : GraphQLField,
-      ) => MockFunction | void,
-    ) : MockServer
-  )> = defaultAutomocks;
+      ) => MockFunction | void
+    )
+  > = defaultAutomocks;
 
   /**
    * Mock function
@@ -1143,10 +1156,10 @@ A server error can be simulated by including an `Error` instance in `mockOverrid
 
 ### Why use this over `graphql-tools` mocking functionality?
 
-[`graphql-tools`](https://www.apollographql.com/docs/graphql-tools/mocking/) was the first to introduce the idea of mocking an entire GraphQL server using its schema definition. Unfortunately, it has a number of limitations that prevented us from using it in our tests:
+[`graphql-tools`](https://www.apollographql.com/docs/graphql-tools/mocking/) was the first to introduce the idea of mocking an entire GraphQL server using its schema definition. Unfortunately, we could not use it in our tests because of a few limitations:
 - There is no way to customize the values of aliased fields (see [example](/examples/graphql-tools/aliased.js)). This is a deal breaker when writing tests because you need to be able to customize any value that a test relies on. 
 - Resolver functions are ignored if the resolver function of their parent field returns an object (see [example](/examples/graphql-tools/nested.js)). This is an unexpected behavior that makes mocking non-scalar fields very confusing.
-- It is not possible to customize mocks on a per query basis. There has been [attempts](https://blog.apollographql.com/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) to work around this but they add another layer of complexity (see [example](/examples/graphql-tools/mergeResolvers.js)).
+- It is not possible to customize mocks on a per query basis. There has been an [attempt](https://blog.apollographql.com/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) to work around this but it adds another layer of complexity (see [example](/examples/graphql-tools/mergeResolvers.js)).
 - There is no way to automock certain field types. That becomes quite repititive if you use Relay and need to mock all the connection fields (see [example](#TODO)). 
 
 In addition to these limitations, its mocking API can be confusing. For example, it is not clear why object types must be mocked with resolver functions. Is it not enough to define resolver functions for fields? Similarly, it is not clear why `root`, `context` and `info` parameters are passed to the mock functions. When does it make sense to access those parameters in a mock function?
