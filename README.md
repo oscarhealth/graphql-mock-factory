@@ -666,6 +666,70 @@ A `mockList` can be overriden with an array or with another `mockList`.
   </p>
 </details>
 
+### Mocking interfaces and unions
+
+In order to know which type to resolve to, `mockOverride` must specify `__typename` for fields 
+that return an interface or a union type.
+
+<details>
+  <summary>Example for fields that return an interface type</summary>
+  <p>
+
+  ```js
+  const schemaDefinition = `
+    type Query {
+      node(id: ID!): Node
+    }
+
+    type User implements Node {
+      id: ID!
+      name: String
+    }
+
+    type Address implements Node {
+      id: ID!
+      address: String
+    }
+
+    type Node {
+      id: ID!
+    }
+  `;
+
+  ...
+
+  mockedServer(`
+    query {
+      node(id: 'USER_ID') {
+        ... on User {
+          name
+        }
+      }
+    }`, {}, {
+      node: {
+        __typename: 'User',
+        name: 'Oscar',
+      }
+    }
+  );
+  // ->
+  // { data: 
+  //   { node: 
+  //      { name: 'Oscar } }
+  ```
+  </p>
+</details>
+
+<details>
+  <summary>Example for fields that return a union type</summary>
+  <p>
+
+  ```js
+  // TODO Add example
+  ```
+  </p>
+</details>
+
 ### Simulating field errors
 
 A field error can be simulated by including an `Error` instance in `mockOverride`.

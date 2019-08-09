@@ -680,18 +680,24 @@ describe('server', () => {
       type Query {
         object: Object
         nonNullObject: Object!
+        interface: Interface
+        nonNullInterace: Interface!
         listOfObjects: [Object]
         scalar: Int
         nonNullScalar: Int!
         listOfScalars: [Int]
       }
 
-      type Object {
+      type Object implements Interface {
         property: String
       }
 
       enum Enum {
         VALUE
+      }
+
+      interface Interface {
+        property: String
       }
     `;
 
@@ -792,7 +798,7 @@ describe('server', () => {
       it('Does not raise an error when there is no base mock for a field that is a non-null object', () => {
         const mocks = {
           Query: {
-            // listOfObjects is not defined
+            // nonNullObject is not defined
           },
           Object: {
             property: () => 'Object.property'
@@ -805,6 +811,48 @@ describe('server', () => {
           query test {
             nonNullObject {
               property
+            }
+          }
+        `);
+      });
+
+      it('Does not raise an error when there is no base mock for a field that is an interface', () => {
+        const mocks = {
+          Query: {
+            // interface is not defined
+          },
+          Object: {
+            property: () => 'Object.property'
+          }
+        };
+
+        const server = mockServer(schemaDefinition, mocks, null);
+
+        const result = server(`
+          query test {
+            object {
+              interface
+            }
+          }
+        `);
+      });
+
+      it('Does not raise an error when there is no base mock for a field that is a non-null interface', () => {
+        const mocks = {
+          Query: {
+            // nonNullInterface is not defined
+          },
+          Object: {
+            property: () => 'Object.property'
+          }
+        };
+
+        const server = mockServer(schemaDefinition, mocks, null);
+
+        const result = server(`
+          query test {
+            object {
+              nonNullInterface
             }
           }
         `);
@@ -1175,6 +1223,7 @@ describe('server', () => {
       type Query {
         object: Object
         objectWith2Interfaces: ObjectWith2Interfaces
+        interface: ObjectInterface4
       }
     
       type Object implements ObjectInterface {
@@ -1204,6 +1253,18 @@ describe('server', () => {
       }
 
       interface ObjectInterface3 {
+        scalar: String
+      }
+
+      interface ObjectInterface4 {
+        scalar: String
+      }
+
+      type Object1 implements ObjectInterface4 {
+        scalar: String
+      }
+
+      type Object2 implements ObjectInterface4 {
         scalar: String
       }
     `;
@@ -1253,7 +1314,7 @@ describe('server', () => {
       }
     });
 
-    it('Does not Throws an error when there is a mock defined for the field of an interface that is a scalar', () => {
+    it('Does not throw an error when there is a mock defined for the field of an interface that is a scalar', () => {
       mockServer(schemaDefinition, {
         ObjectInterface: {
           scalar: () => {}
@@ -1261,7 +1322,7 @@ describe('server', () => {
       });
     });
 
-    it('Does not Throws an error when there is a mock defined for the field of an interface that is a non-null scalar', () => {
+    it('Does not throw an error when there is a mock defined for the field of an interface that is a non-null scalar', () => {
       mockServer(schemaDefinition, {
         ObjectInterface: {
           nonNullScalar: () => {}
@@ -1310,7 +1371,7 @@ describe('server', () => {
       });
     });
 
-    it('Ignores the interface mocks for a field if there more than one interface defining the field', () => {
+    it('Ignores the interface mocks for a field if there is more than one interface defining the field', () => {
       const mocks = {
         ObjectInterface: {
           scalar: () => 'ObjectInterface.scalar'
@@ -1331,6 +1392,82 @@ describe('server', () => {
       } catch (error) {
         expect(error.message).toBe(
           'More than 1 interface for this field. Define base mock on the type.'
+        );
+      }
+    });
+
+    it('Interface fields', () => {
+      const mocks = {
+        // Query: {
+        //   interface: () => ({}),
+        // },
+        Object1: {
+          scalar: () => 'Object1.scalar'
+        },
+        Object2: {
+          scalar: () => 'Object2.scalar'
+        }
+      };
+
+      const server = mockServer(schemaDefinition, mocks, null);
+
+      const result = server(
+        `
+        query test {
+          interface1: interface {
+            scalar
+          }
+          interface2: interface {
+            scalar
+          }
+        }
+      `,
+        {},
+        {
+          interface1: {
+            __typename: 'Object1'
+          },
+          interface2: {
+            __typename: 'Object2'
+          }
+        }
+      );
+
+      expect(result).toEqual({
+        data: {
+          interface1: {
+            scalar: 'Object1.scalar'
+          },
+          interface2: {
+            scalar: 'Object2.scalar'
+          }
+        }
+      });
+    });
+
+    it('Throws an error if the queryMock for an interface field does not specify the type', () => {
+      const mocks = {
+        Object1: {
+          scalar: () => 'Object1.scalar'
+        },
+        Object2: {
+          scalar: () => 'Object2.scalar'
+        }
+      };
+
+      const server = mockServer(schemaDefinition, mocks, null);
+
+      expect.assertions(1);
+      try {
+        const result = server(`
+          query test {
+            interface {
+              scalar
+            }
+          }`);
+      } catch (error) {
+        expect(error.message).toBe(
+          'queryMock must specify type for interface fields.'
         );
       }
     });

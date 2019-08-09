@@ -1,5 +1,8 @@
 // @flow
-import { buildSchemaFromTypeDefinitions } from 'graphql-tools';
+import {
+  addResolveFunctionsToSchema,
+  buildSchemaFromTypeDefinitions
+} from 'graphql-tools';
 import {
   graphqlSync,
   GraphQLSchema,
@@ -70,6 +73,10 @@ export function mockServer(
     field.resolve = getFieldResolver(type, field, mocks);
   });
 
+  forEachInterface(schema, interfaceType => {
+    interfaceType.resolveType = interfaceResolveType;
+  });
+
   return (query: string, variables: Object = {}, mockOverride: Object = {}) => {
     const result = graphqlSync(
       schema,
@@ -100,6 +107,28 @@ function addAutomocks(schema, mocks, getMocks) {
     }
   });
 }
+
+/**
+ * In order to resolve interface field, we curretly require users
+ * to specify the type to resolve to via `__typename` in `queryMock`.
+ *
+ * Future work:
+ * We may want to remove that requirement so queries can always resolve
+ * succesfully without having to specify a `queryMock`.
+ * Here are some ideas:
+ * - Have this function pick randomly a valid type
+ * - Have this function look at the query fragment and pick the most likely type
+ * - Have this function look at the query fragment, pick its type if there is only one,
+ *   otherwise throw a helpful validation error.
+ * - Have this function be customizable via MockMap / baseMock
+ * - Have this function be customizable via autoMock
+ */
+const interfaceResolveType = markUnexpectedErrors(source => {
+  if (!source.queryMock || !source.queryMock.__typename) {
+    throw Error('queryMock must specify type for interface fields.');
+  }
+  return source.queryMock.__typename;
+});
 
 type Root = {|
   queryMock: any,
@@ -326,7 +355,8 @@ function getBaseMockValue(
 
   if (
     baseMockValue === undefined &&
-    nullableType instanceof GraphQLObjectType
+    (nullableType instanceof GraphQLObjectType ||
+      nullableType instanceof GraphQLInterfaceType)
   ) {
     return baseMockValue;
   }
@@ -578,5 +608,21 @@ function forEachField(schema: GraphQLSchema, callback) {
       const field = fields[fieldName];
       callback(type, field);
     });
+  });
+}
+
+function forEachInterface(schema: GraphQLSchema, callback) {
+  const typeMap = schema.getTypeMap();
+  Object.keys(typeMap).forEach(typeName => {
+    const type = typeMap[typeName];
+
+    if (
+      getNamedType(type).name.startsWith('__') ||
+      !(type instanceof GraphQLInterfaceType)
+    ) {
+      return;
+    }
+
+    callback(type);
   });
 }
