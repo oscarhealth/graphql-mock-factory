@@ -1,6 +1,6 @@
 {
   "name": "graphql-mock-factory",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Easily generate customized GraphQL mock responses in JavaScript tests.",
   "repository": "https://github.com/oscarhealth/graphql-mock-factory",
   "author": "@jnak",
