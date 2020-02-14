@@ -98,7 +98,7 @@ function addAutomocks(schema, mocks, getMocks) {
     }
 
     for (let getMock of getMocks) {
-      const baseMock = getMock(parentType, field);
+      const baseMock = getMock(parentType, field, getMocks);
       if (baseMock) {
         mocks[parentType.name] = mocks[parentType.name] || {};
         mocks[parentType.name][field.name] = baseMock;
@@ -373,13 +373,17 @@ function getBaseMockValue(
     );
   }
 
-  if (baseMockValue === undefined && !baseMockInfo.path) {
-    throw Error(
-      `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
-        `returned 'undefined'.\n` +
-        `Base mocks are not allowed to return 'undefined'. ` +
-        `Return a value compatible with type '${nullableType.name}'.`
-    );
+  if (baseMockValue === undefined) {
+    if (baseMockInfo.path) {
+      return baseMockValue;
+    } else {
+      throw Error(
+        `Base mock for \'${getFieldName(baseMockInfo)}\' ` +
+          `returned 'undefined'.\n` +
+          `Base mocks are not allowed to return 'undefined'. ` +
+          `Return a value compatible with type '${nullableType.name}'.`
+      );
+    }
   }
 
   if (baseMockValue === null) {

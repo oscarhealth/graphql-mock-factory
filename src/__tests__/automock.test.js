@@ -15,7 +15,8 @@ describe('getDefautMock', () => {
       float: Float
       string: String
       listOfObjects: [Object]
-      listOfScalars: [String]
+      listOfStrings: [String!]
+      listOfInts: [Int]
     }
 
     type Object {
@@ -30,7 +31,6 @@ describe('getDefautMock', () => {
 
   it('Provides default mocks for standard scalar fields and lists', () => {
     const server = mockServer(schemaDefinition, {});
-
     const result = server(`
       query test {
         boolean
@@ -42,7 +42,8 @@ describe('getDefautMock', () => {
         listOfObjects {
           property
         }
-        listOfScalars
+        listOfStrings
+        listOfInts
       }
     `);
 
@@ -61,10 +62,14 @@ describe('getDefautMock', () => {
     expect(data.listOfObjects).toHaveLength(2);
     //$FlowFixMe
     expect(typeof data.listOfObjects[0].property).toBe('string');
-    expect(data.listOfScalars).toBeInstanceOf(Array);
-    expect(data.listOfScalars).toHaveLength(2);
+    expect(data.listOfObjects).toBeInstanceOf(Array);
+    expect(data.listOfStrings).toHaveLength(2);
     //$FlowFixMe
-    expect(typeof data.listOfScalars[0]).toBe('string');
+    expect(typeof data.listOfStrings[0]).toBe('string');
+    expect(data.listOfInts).toBeInstanceOf(Array);
+    expect(data.listOfInts).toHaveLength(2);
+    //$FlowFixMe
+    expect(typeof data.listOfInts[0]).toBe('number');
   });
 
   it('Only adds mocks if no mocks were manually defined', () => {
@@ -76,7 +81,8 @@ describe('getDefautMock', () => {
         float: () => 0.0,
         string: () => 'Query.string',
         listOfObjects: mockList(1),
-        listOfScalars: mockList(1)
+        listOfStrings: mockList(1),
+        listOfInts: mockList(1)
       }
     };
 
@@ -92,7 +98,8 @@ describe('getDefautMock', () => {
         listOfObjects {
           property
         }
-        listOfScalars
+        listOfInts
+        listOfStrings
       }
     `);
 
@@ -105,6 +112,9 @@ describe('getDefautMock', () => {
     expect(data.float).toBe(0.0);
     expect(data.string).toBe('Query.string');
     expect(data.listOfObjects).toHaveLength(1);
-    expect(data.listOfScalars).toHaveLength(1);
+    expect(data.listOfInts).toHaveLength(1);
+    //$FlowFixMe
+    expect(data.listOfInts[0]).toBeNull();
+    expect(data.listOfStrings).toBeNull();
   });
 });
