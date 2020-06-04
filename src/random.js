@@ -1,4 +1,3 @@
-import seedrandom from 'seedrandom';
 import { v4 as uuidv4 } from 'uuid';
 
 // borrowed from lorem-ipsum package
@@ -67,25 +66,22 @@ export const WORDS = [
   'voluptate'
 ];
 
-// seed the random number generator so we get consistent results
-const rng = seedrandom('graphql!');
-
 export function getInt(min, max) {
-  return (Math.abs(rng.int32()) % (max - min + 1)) + min;
+  return Math.floor(getFloat(min, max + 1));
 }
 
 export function getBoolean() {
-  return rng() > 0.5 ? true : false;
+  return Math.random() > 0.5 ? true : false;
 }
 
 export function getFloat(min, max) {
-  return rng() * (max - min) + min;
+  return Math.random() * (max - min) + min;
 }
 
 export function getUUID() {
   const seeds = [];
   for (let i = 0; i < 16; i++) {
-    seeds[i] = Math.abs(rng.int32()) % 256;
+    seeds[i] = getInt(0, 255);
   }
   return uuidv4({ random: seeds });
 }
@@ -93,7 +89,7 @@ export function getUUID() {
 export function getString(wordCount = 5) {
   const words = [];
   for (let i = 0; i < wordCount; i++) {
-    words[i] = WORDS[Math.abs(rng.int32()) % WORDS.length];
+    words[i] = WORDS[getInt(0, WORDS.length - 1)];
   }
   return words.join(' ');
 }
