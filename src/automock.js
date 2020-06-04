@@ -1,7 +1,7 @@
-import casual from 'casual';
 import { GraphQLEnumType, getNullableType } from 'graphql';
 import { automockLists } from './list';
 import { automockRelay } from './relay';
+import * as random from './random';
 
 export function automockEnums(parentType, field) {
   const nullableType = getNullableType(field.type);
@@ -10,16 +10,15 @@ export function automockEnums(parentType, field) {
   }
 
   const values = nullableType.getValues().map(value => value.value);
-  return () => values[casual.integer(0, values.length - 1)];
+  return () => values[random.getInt(0, values.length - 1)];
 }
 
-// TODO Use `faker` once v5 is released
 export const scalarMocks = {
-  Boolean: () => casual.boolean,
-  ID: () => casual.uuid,
-  Int: () => casual.integer(-100, 100),
-  Float: () => casual.double(-100, 100),
-  String: () => casual.string
+  Boolean: () => random.getBoolean(),
+  ID: () => random.getUUID(),
+  Int: () => random.getInt(-100, 100),
+  Float: () => random.getFloat(-100, 100),
+  String: () => random.getString()
 };
 
 export function automockScalars(scalarMocks) {
