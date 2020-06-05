@@ -1,5 +1,5 @@
 // @flow
-import casual from 'casual';
+import { getUUID } from './random';
 import { mockList } from './list';
 import { GraphQLObjectType } from 'graphql';
 
@@ -75,7 +75,7 @@ export function automockRelay(parentType, field) {
 
   if (isRelayNode(parentType)) {
     if (field.name === 'id') {
-      return () => casual.uuid;
+      return () => getUUID();
     }
   }
 
