@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v1 as uuidv1 } from 'uuid';
 
 // borrowed from lorem-ipsum package
 export const WORDS = [
@@ -79,11 +79,7 @@ export function getFloat(min, max) {
 }
 
 export function getUUID() {
-  const seeds = [];
-  for (let i = 0; i < 16; i++) {
-    seeds[i] = getInt(0, 255);
-  }
-  return uuidv4({ random: seeds });
+  return uuidv1();
 }
 
 export function getString(wordCount = 5) {

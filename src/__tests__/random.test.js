@@ -1,15 +1,21 @@
 import * as random from '../random';
 import validate from 'uuid-validate';
 
+const MIN_TRIES = 10; // make sure we fully test boundaries
+const MAX_TRIES = 1000;
+
 describe('random', () => {
   it('Generates random boolean values', () => {
     let hasTrue = false;
     let hasFalse = false;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < MAX_TRIES; i++) {
       if (random.getBoolean()) {
         hasTrue = true;
       } else {
         hasFalse = true;
+      }
+      if (hasTrue && hasFalse) {
+        break;
       }
     }
     expect(hasTrue).toBeTruthy();
@@ -19,7 +25,7 @@ describe('random', () => {
   it('Generates random int values', () => {
     let hasMinusThree = false;
     let hasPlusThree = false;
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < MAX_TRIES; i++) {
       const rand = random.getInt(-3, 3);
       expect(rand).toBeGreaterThanOrEqual(-3);
       expect(rand).toBeLessThanOrEqual(3);
@@ -29,6 +35,9 @@ describe('random', () => {
       if (rand === 3) {
         hasPlusThree = true;
       }
+      if (i >= MIN_TRIES && hasMinusThree && hasPlusThree) {
+        break;
+      }
     }
     expect(hasMinusThree).toBeTruthy();
     expect(hasPlusThree).toBeTruthy();
@@ -37,7 +46,7 @@ describe('random', () => {
   it('Generates random float values', () => {
     let hasMinusThrees = false;
     let hasPlusThrees = false;
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < MAX_TRIES; i++) {
       const rand = random.getFloat(-4, 4);
       expect(rand).toBeGreaterThanOrEqual(-4);
       expect(rand).toBeLessThanOrEqual(4);
@@ -47,13 +56,16 @@ describe('random', () => {
       if (rand >= 3) {
         hasPlusThrees = true;
       }
+      if (i >= MIN_TRIES && hasMinusThrees && hasPlusThrees) {
+        break;
+      }
     }
     expect(hasMinusThrees).toBeTruthy();
     expect(hasPlusThrees).toBeTruthy();
   });
 
   it('Generates random UUIDs', () => {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < MIN_TRIES; i++) {
       const uuid = random.getUUID();
       expect(validate(uuid)).toBeTruthy();
       expect(uuid).not.toEqual(random.getUUID());
@@ -61,7 +73,7 @@ describe('random', () => {
   });
 
   it('Generates random strings', () => {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < MIN_TRIES; i++) {
       const str = random.getString();
       expect(str.length).toBeGreaterThan(5);
       const words = str.split(' ');
