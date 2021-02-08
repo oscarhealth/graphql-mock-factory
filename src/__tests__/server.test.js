@@ -753,7 +753,7 @@ describe('server', () => {
           });
         } catch (error) {
           expect(error.message).toBe(
-            'baseMock can only define field mocks on Type or Interface.'
+            'baseMock can only define field mocks on Type or Interface or Union.'
           );
         }
       });
@@ -1279,7 +1279,7 @@ describe('server', () => {
         });
       } catch (error) {
         expect(error.message).toBe(
-          'It is not allowed to define mocks for non-leaf fields on interfaces.'
+          'It is not allowed to define mocks for non-leaf fields on interfaces or unions.'
         );
       }
     });
@@ -1294,7 +1294,7 @@ describe('server', () => {
         });
       } catch (error) {
         expect(error.message).toBe(
-          'It is not allowed to define mocks for non-leaf fields on interfaces.'
+          'It is not allowed to define mocks for non-leaf fields on interfaces or unions.'
         );
       }
     });
@@ -1309,7 +1309,7 @@ describe('server', () => {
         });
       } catch (error) {
         expect(error.message).toBe(
-          'It is not allowed to define mocks for non-leaf fields on interfaces.'
+          'It is not allowed to define mocks for non-leaf fields on interfaces or unions.'
         );
       }
     });
@@ -1340,7 +1340,7 @@ describe('server', () => {
         });
       } catch (error) {
         expect(error.message).toBe(
-          'It is not allowed to define mocks for non-leaf fields on interfaces.'
+          'It is not allowed to define mocks for non-leaf fields on interfaces or unions.'
         );
       }
     });
@@ -1467,7 +1467,7 @@ describe('server', () => {
           }`);
       } catch (error) {
         expect(error.message).toBe(
-          'queryMock must specify type for interface fields.'
+          'queryMock must specify type for interface or union fields.'
         );
       }
     });
