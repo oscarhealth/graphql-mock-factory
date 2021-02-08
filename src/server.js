@@ -9,6 +9,7 @@ import {
   GraphQLObjectType,
   GraphQLEnumType,
   GraphQLInterfaceType,
+  GraphQLUnionType,
   GraphQLList,
   getNullableType,
   getNamedType,
@@ -73,8 +74,8 @@ export function mockServer(
     field.resolve = getFieldResolver(type, field, mocks);
   });
 
-  forEachInterface(schema, interfaceType => {
-    interfaceType.resolveType = interfaceResolveType;
+  forEachInterfaceOrUnion(schema, interfaceOrUnionType => {
+    interfaceOrUnionType.resolveType = interfaceOrUnionResolveType;
   });
 
   return (query: string, variables: Object = {}, mockOverride: Object = {}) => {
@@ -123,9 +124,9 @@ function addAutomocks(schema, mocks, getMocks) {
  * - Have this function be customizable via MockMap / baseMock
  * - Have this function be customizable via autoMock
  */
-const interfaceResolveType = markUnexpectedErrors(source => {
+const interfaceOrUnionResolveType = markUnexpectedErrors(source => {
   if (!source.queryMock || !source.queryMock.__typename) {
-    throw Error('queryMock must specify type for interface fields.');
+    throw Error('queryMock must specify type for interface or union fields.');
   }
   return source.queryMock.__typename;
 });
@@ -356,7 +357,8 @@ function getBaseMockValue(
   if (
     baseMockValue === undefined &&
     (nullableType instanceof GraphQLObjectType ||
-      nullableType instanceof GraphQLInterfaceType)
+      nullableType instanceof GraphQLInterfaceType ||
+      nullableType instanceof GraphQLUnionType)
   ) {
     return baseMockValue;
   }
@@ -530,17 +532,22 @@ function validateMocks(mocks: MockMap, schema: GraphQLSchema) {
     if (
       !(
         typeMap[typeName] instanceof GraphQLInterfaceType ||
-        typeMap[typeName] instanceof GraphQLObjectType
+        typeMap[typeName] instanceof GraphQLObjectType ||
+        typeMap[typeName] instanceof GraphQLUnionType
       )
     ) {
-      throw Error('baseMock can only define field mocks on Type or Interface.');
+      throw Error(
+        'baseMock can only define field mocks on Type or Interface or Union.'
+      );
     }
 
     if (typeof mocks[typeName] !== 'object') {
       throw Error('mocks should be an object of object of functions.');
     }
 
-    const isInterface = typeMap[typeName] instanceof GraphQLInterfaceType;
+    const isInterfaceOrUnion =
+      typeMap[typeName] instanceof GraphQLInterfaceType ||
+      typeMap[typeName] instanceof GraphQLUnionType;
 
     const fields = typeMap[typeName].getFields();
 
@@ -556,10 +563,13 @@ function validateMocks(mocks: MockMap, schema: GraphQLSchema) {
         throw Error('mocks should be an object of object of functions.');
       }
 
-      if (isInterface && !isLeafType(getNullableType(fields[fieldName].type))) {
+      if (
+        isInterfaceOrUnion &&
+        !isLeafType(getNullableType(fields[fieldName].type))
+      ) {
         // TODO Add better validation message
         throw Error(
-          'It is not allowed to define mocks for non-leaf fields on interfaces.'
+          'It is not allowed to define mocks for non-leaf fields on interfaces or unions.'
         );
       }
     });
@@ -615,14 +625,16 @@ function forEachField(schema: GraphQLSchema, callback) {
   });
 }
 
-function forEachInterface(schema: GraphQLSchema, callback) {
+function forEachInterfaceOrUnion(schema: GraphQLSchema, callback) {
   const typeMap = schema.getTypeMap();
   Object.keys(typeMap).forEach(typeName => {
     const type = typeMap[typeName];
 
     if (
       getNamedType(type).name.startsWith('__') ||
-      !(type instanceof GraphQLInterfaceType)
+      !(
+        type instanceof GraphQLInterfaceType || type instanceof GraphQLUnionType
+      )
     ) {
       return;
     }
